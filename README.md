@@ -1,0 +1,31 @@
+# NodeJS State Language DSL
+
+``UNDER DEVELOPMENT``
+
+NodeJS DSL builder based on State Machine language of [Amazon-State-Language](https://states-language.net/spec.html).
+
+## Motivation
+
+This package allows you to build, validate and test you state-machine JSON in a more convenient way by interacting with Objects. The project is written in OOP style and allows you to interact and build you state-machine at runtime. This has many use-cases such as local flow validation, custom middlewares such as task identity resolvers, Tasks input/output mocking for flow-testing.
+
+The final goal is to provide an state-machine-editor with visualization in which the user will be able to build his own custom state-machine using a visualized version of the state-machine without state-language familiarity.
+
+## TODO
+
+### Not implemented states
+
+- Task
+- Choice
+- Wait
+- Succeeed
+- Fail
+- Parallel
+
+
+third party features using this package.
+
+- Flow validation
+- Middleware to mock tasks input/ouput
+- Middleware Lambda Task reference resolver
+- Build State-machine from JSON (reversed dump)
+- State-machine visualization

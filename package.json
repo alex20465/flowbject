@@ -1,0 +1,36 @@
+{
+  "name": "state-language-dsl",
+  "version": "1.0.0",
+  "description": "NodeJS DSL builder based on State Machine language of Amazon-State-Language.",
+  "main": "./lib/index.js",
+  "scripts": {
+    "test": "mocha --require ts-node/register --watch-extensions ts,tsx \"test/**/*.test.{ts,tsx}\"",
+    "build:commonjs": "rimraf lib && tsc --target es5 --outDir lib --module commonjs --declaration",
+    "build:es": "rimraf es && tsc --target es6 --outDir es --module es6",
+    "build": "npm run build:commonjs && npm run build:es",
+    "ts": "ts-node src/",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "Alexandros Fotiadis <fotiadis90@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.1.2",
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^9.4.6",
+    "chai": "^4.1.2",
+    "mocha": "^5.0.1",
+    "rimraf": "^2.6.2",
+    "ts-node": "^4.1.0",
+    "typescript": "^2.7.1"
+  },
+  "files": [
+    "es",
+    "lib"
+  ],
+  "types": "./lib/index.d.ts",
+  "jsnext:main": "./es/index.js",
+  "module": "./es/index.js",
+  "dependencies": {
+    "JSONPath": "^0.11.2"
+  }
+}
