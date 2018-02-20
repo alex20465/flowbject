@@ -19,16 +19,6 @@ export abstract class Field<T extends State> {
     }
 
     /**
-     * Dump all field properties to an object.
-     */
-    abstract dump(): any;
-
-    /**
-     * Load field data from an object.
-     */
-    abstract load(obj: any): T;
-
-    /**
      * Method to validate some data, optional implementation. 
      */
     validate(): null | Error {

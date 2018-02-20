@@ -41,18 +41,4 @@ export abstract class State {
             .map((field) => <Error>field.validate())
             .filter((validationResponse) => validationResponse);
     }
-
-    dump(): any {
-        let dump = {};
-        const validationErrors = this.validateFields();
-        if (validationErrors.length) {
-            throw validationErrors[0];
-        }
-
-        return this.getFields()
-            .filter((field) => field.isConfigured())
-            .reduce((result, field) => {
-                return Object.assign(result, field.dump());
-            }, {});
-    }
 }

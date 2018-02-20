@@ -12,20 +12,6 @@ describe('State Machine', () => {
         state = (new Pass('foo')).next.end();
     });
 
-    it('should dump correctly with single Pass state', () => {
-        machine.addState(state);
-        const dump = machine.dump();
-        expect(dump).to.deep.equal({
-            StartAt: 'foo',
-            States: {
-                "foo": {
-                    End: true,
-                    Type: 'Pass'
-                }
-            }
-        })
-    })
-
     describe('validation', () => {
         it('should contain validation "requires at least 1 state item"', () => {
             const errors = machine.validate();

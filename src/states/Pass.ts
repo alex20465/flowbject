@@ -14,11 +14,4 @@ export class Pass extends State {
         this.result = new ResultField<Pass>(this);
         this.next = new NextField<Pass>(this);
     }
-
-    dump() {
-        return Object.assign(super.dump(), {
-            Type: 'Pass'
-        });
-    }
 }
-

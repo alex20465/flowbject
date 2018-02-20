@@ -52,19 +52,4 @@ export class PathField<T extends State> extends Field<T> {
     getOutput() {
         return this.outputPath;
     }
-
-    dump() {
-        let dump: any = {};
-        if(this.inputPath){
-            dump['InputPath'] = this.inputPath;
-        }
-        if(this.outputPath){
-            dump['OutputPath'] = this.outputPath;
-        }
-        return dump;
-    }
-
-    load(obj: any): any {
-        throw new Error('Not Implemented');
-    }
 }

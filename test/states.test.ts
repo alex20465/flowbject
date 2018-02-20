@@ -35,45 +35,5 @@ describe('States', () => {
             const errors = state.next.end().validateFields();
             expect(errors).lengthOf(0);
         });
-
-        it('should dump correctly [resultPath]', () => {
-            const dump = state
-                .next.end()
-                .resultPath.set('$.test')
-                .dump();
-            expect(dump).to.be.deep.equal({
-                Type: 'Pass',
-                ResultPath: '$.test',
-                End: true
-            })
-        });
-
-        it('should dump correctly with [result]', () => {
-            const dump = state
-                .next.end()
-                .result.set('test', true)
-                .dump();
-            expect(dump).to.be.deep.equal({
-                Type: 'Pass',
-                Result: {
-                    test: true
-                },
-                End: true
-            })
-        });
-
-        it('should dump correctly with [input] and [output] path setup', () => {
-            const dump = state
-                .path.setInput('$.test1')
-                .path.setOutput('$.test2')
-                .next.end()
-                .dump();
-            expect(dump).to.be.deep.equal({
-                Type: 'Pass',
-                InputPath: '$.test1',
-                OutputPath: '$.test2',
-                End: true
-            })
-        });
     });
 });

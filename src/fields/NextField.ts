@@ -7,14 +7,6 @@ export class NextField<T extends State> extends Field<T> {
     private nextTargetName: string;
     private _end: boolean;
 
-    dump() {
-        if (this._end === true) {
-            return { End: true };
-        } else {
-            return { Next: this.nextTargetName };
-        }
-    }
-
     toState(target: State | string): T {
         if (target instanceof State) {
             this.nextTargetName = target.getName();
@@ -25,20 +17,13 @@ export class NextField<T extends State> extends Field<T> {
         return this.getParentState();
     }
 
+    isEnd() { return this._end }
+
+    nextStateName() { return this.nextTargetName }
+
     end(): T {
         this._end = true;
         this.receiveConfiguration();
-        return this.getParentState();
-    }
-
-    load(obj: any) {
-        if (obj['End']) {
-            this.end();
-        } else if (obj['Next']) {
-            this.toState(obj['Next']);
-        } else {
-            throw new Error('Failed to load required field "Next" of field dump: ' + JSON.stringify(obj));
-        }
         return this.getParentState();
     }
 }

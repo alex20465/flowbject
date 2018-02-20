@@ -57,33 +57,9 @@ export class StateMachine {
         return stateErrors.concat(machineErrors);
     }
 
-    dump(): Object {
-        const dump = {
-            StartAt: this.startState.getName(),
-            States: {}
-        };
-
-        if (this.getComment()) {
-            dump['Comment'] = this.getComment();
-        }
-
-        if (this.getTimeout()) {
-            dump['TimeoutSeconds'] = this.getTimeout();
-        }
-
-        if (this.getVersion()) {
-            dump['Version'] = this.getVersion();
-        }
-
-        dump.States = this.states.reduce((states, state) => {
-            states[state.getName()] = state.dump();
-            return states;
-        }, {});
-
-        return dump;
-    }
-
     getComment() { return this.comment }
     getTimeout() { return this.timeout }
     getVersion() { return this.version }
+    getStates() { return this.states.slice(0) }
+    getStartState() { return this.startState }
 }

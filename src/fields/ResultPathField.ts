@@ -27,16 +27,4 @@ export class ResultPathField<T extends State> extends Field<T> {
     get() {
         return this.path;
     }
-
-    dump() {
-        return {
-            ResultPath: this.get()
-        }
-    }
-
-    load(obj: any): any {
-        if (obj['ResultPath']) {
-            this.set(obj['ResultPath']);
-        }
-    }
 }

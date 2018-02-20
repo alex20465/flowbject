@@ -38,16 +38,6 @@ describe('Fields', () => {
             resultField.set('test', 0);
             expect(resultField.get('test')).to.be.equal(0);
         });
-
-        it('should dump data', () => {
-            const dump = resultField.set('test', 0).result.dump();
-            expect(dump).to.deep.eq({ Result: { test: 0 } });
-        });
-
-        it('should load data', () => {
-            const loadedResult = resultField.load({ Result: { 'test': 8 } }).result.getAll();
-            expect(loadedResult).to.deep.eq({ test: 8 });
-        });
     });
 
     describe('NextField', () => {
@@ -68,32 +58,6 @@ describe('Fields', () => {
         it('should be configured after END() call', () => {
             nextField.end();
             expect(nextField.isConfigured()).to.be.true;
-        });
-
-        it('should dump End=true', () => {
-            nextField.end();
-            expect(nextField.dump()).to.deep.equal({ End: true });
-        });
-
-        it('should dump Next=foo', () => {
-            nextField.toState('foo');
-            expect(nextField.dump()).to.deep.equal({ Next: 'foo' });
-        });
-
-        it('should dump Next=foo (State instance)', () => {
-            const state = new Pass('foo');
-            nextField.toState(state);
-            expect(nextField.dump()).to.deep.equal({ Next: 'foo' });
-        });
-
-        it('should load and dump END=true correctly', () => {
-            const dump = nextField.load({End: true}).next.dump();
-            expect(dump).to.deep.equal({End: true});
-        });
-
-        it('should load and dump Next=foo correctly', () => {
-            const dump = nextField.load({Next: 'foo'}).next.dump();
-            expect(dump).to.deep.equal({Next: 'foo'});
         });
     });
 
@@ -172,20 +136,6 @@ describe('Fields', () => {
         it('should change configured state after SET', () => {
             expect(pathField.isConfigured()).to.be.false;
             expect(pathField.setInput('$.test').path.isConfigured()).to.be.true;
-        });
-
-        it('should dump correctly with input', () =>{
-            const dump = pathField.setInput('$.test').path.dump();
-            expect(dump).to.deep.equal({
-                InputPath: '$.test'
-            });
-        });
-
-        it('should dump correctly with output', () =>{
-            const dump = pathField.setOutput('$.test').path.dump();
-            expect(dump).to.deep.equal({
-                OutputPath: '$.test'
-            });
         });
     });
 })
