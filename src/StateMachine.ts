@@ -48,7 +48,7 @@ export class StateMachine {
 
     validate(): Error[] {
         const stateErrors = this.states.reduce((errors, state) => {
-            return errors.concat(state.validateFields());
+            return errors.concat(state.validate());
         }, []);
         const machineErrors = [];
         if (this.states.length === 0) {

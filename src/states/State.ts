@@ -36,7 +36,7 @@ export abstract class State {
             });
     }
 
-    validateFields(): Error[] {
+    validate(): Error[] {
         return this.getFields()
             .map((field) => <Error>field.validate())
             .filter((validationResponse) => validationResponse);

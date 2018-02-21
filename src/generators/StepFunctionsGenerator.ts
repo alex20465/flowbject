@@ -50,15 +50,36 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             ResultPath: field.get()
         }
     }
+    generateCatchField(field: fields.CatchField<any>): Object {
+        return {
+            Catch: field.getCatchers().map((cacher) => {
+                let cacherData = {
+                    ErrorEquals: cacher.getErrors()
+                };
+                Object.assign(cacherData, this.generateNextField(cacher.next));
+                if (cacher.resultPath.isConfigured()) {
+                    Object.assign(cacherData, this.generateResultPathField(cacher.resultPath));
+                }
+                return cacherData;
+            })
+        }
+    }
     generatePass(state: states.Pass): Object {
         return {
             Type: 'Pass'
         }
     }
 
+    generateTask(task: states.Task): Object {
+        return {
+            Type: 'Task',
+            Resource: task.getResource()
+        }
+    }
+
     generateState(state: states.State) {
         let data = this.getMethodTarget(state).call(this, state);
-        const validationErrors = state.validateFields();
+        const validationErrors = state.validate();
         if (validationErrors.length) {
             throw validationErrors[0];
         }

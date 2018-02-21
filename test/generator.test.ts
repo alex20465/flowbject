@@ -4,6 +4,7 @@ import { NextField } from '../src/fields';
 import { Pass } from '../src/states/Pass';
 import { State } from '../src/states';
 import { StateMachine } from '../src/StateMachine';
+import { Task } from '../src/states/Task';
 
 describe('AWSStepFunctions', () => {
     describe('generateField', () => {
@@ -19,7 +20,7 @@ describe('AWSStepFunctions', () => {
             expect(data).to.deep.equal({
                 End: true
             });
-        })
+        });
     });
 
     describe('generateState', () => {
@@ -29,14 +30,72 @@ describe('AWSStepFunctions', () => {
             generator = new StepFunctionsGenerator();
         });
 
-        it('should generate field next', () => {
+        it('should generate state pass', () => {
             const state = (new Pass('foo')).next.end();
             const data = generator.generateState(state);
             expect(data).to.deep.equal({
                 Type: 'Pass',
                 End: true
             });
-        })
+        });
+
+        it('should generate state task', () => {
+            const stateNotFoundTask = new Task('notFoundHandler');
+            const state = (new Task('foo'))
+                .setResource('XY')
+                .next.end();
+
+            // setup not found catcher
+            const notFoundCatcher = state.catch.errors(['NotFoundError']);
+            notFoundCatcher.next.toState(stateNotFoundTask);
+
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Task',
+                Resource: 'XY',
+                End: true,
+                Catch: [
+                    {
+                        ErrorEquals: ["NotFoundError"],
+                        Next: "notFoundHandler"
+                    },
+                ]
+            });
+        });
+
+        it('should generate complex state task', () => {
+            const stateNotFoundTask = new Task('notFoundHandler');
+            const fatalErrorTask = new Task('fatalErrorHandler');
+
+            const state = (new Task('foo')).setResource('XY').next.end();
+
+            // setup not found catcher
+            const notFoundCatcher = state.catch.errors(['NotFoundError']);
+            notFoundCatcher.next.toState(stateNotFoundTask);
+
+            // setup fatal error catcher
+            const fatalErrorCatcher = state.catch.errors(['FatalError', 'ServerError']);
+            fatalErrorCatcher.next.toState(fatalErrorTask);
+            fatalErrorCatcher.resultPath.set('$.errorMessage');
+
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Task',
+                Resource: 'XY',
+                End: true,
+                Catch: [
+                    {
+                        ErrorEquals: ["NotFoundError"],
+                        Next: "notFoundHandler"
+                    },
+                    {
+                        ErrorEquals: ["FatalError", "ServerError"],
+                        Next: "fatalErrorHandler",
+                        ResultPath: "$.errorMessage"
+                    }
+                ]
+            });
+        });
     });
 
     describe('generateStateMachine', () => {

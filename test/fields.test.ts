@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import * as fields from '../src/fields';
-import { Pass } from '../src/states';
+import { Pass, Task } from '../src/states';
 
 
 function createTestState(): Pass {
@@ -97,11 +97,11 @@ describe('Fields', () => {
             it('should provide NULL as default result', () => {
                 expect(pathField.getInput()).to.be.null;
             })
-    
+
             it('should set valid input', () => {
                 expect(pathField.setInput('$.test').path.getInput()).to.be.equal('$.test');
             });
-    
+
             it('should throw error with invalid JSONPath', () => {
                 expect(function invalidJSONPathSetter() {
                     pathField.setInput('-.test');
@@ -117,11 +117,11 @@ describe('Fields', () => {
             it('should provide NULL as default result', () => {
                 expect(pathField.getOutput()).to.be.null;
             })
-    
+
             it('should set valid Output', () => {
                 expect(pathField.setOutput('$.test').path.getOutput()).to.be.equal('$.test');
             });
-    
+
             it('should throw error with invalid JSONPath', () => {
                 expect(function invalidJSONPathSetter() {
                     pathField.setOutput('-.test');
@@ -136,6 +136,35 @@ describe('Fields', () => {
         it('should change configured state after SET', () => {
             expect(pathField.isConfigured()).to.be.false;
             expect(pathField.setInput('$.test').path.isConfigured()).to.be.true;
+        });
+    });
+
+    describe('CatchField', () => {
+        let field: fields.CatchField<Task>;
+        let state: Task;
+        beforeEach(() => {
+            state = new Task('foo');
+            field = new fields.CatchField(state);
+        });
+
+        it('should validate without error', () => {
+            const mockReportState = new Task('report');
+            const error = state.catch.validate();
+            expect(error).to.be.null;
+        });
+
+        it('should validate with error: "requires configuration setup"', () => {
+            const mockReportState = new Task('report');
+            state.catch.errors(['test']); // requires next setup
+            const {message} = state.catch.validate();
+            expect(message).to.contain('requires configuration setup');
+        });
+
+        it('should validate without error but with next setup', () => {
+            const mockReportState = new Task('report');
+            state.catch.errors(['test']).next.end();
+            const error = state.catch.validate();
+            expect(error).to.be.null;
         });
     });
 })
