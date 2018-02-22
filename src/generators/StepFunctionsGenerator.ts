@@ -50,6 +50,30 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             ResultPath: field.get()
         }
     }
+
+    generateRetryField(field: fields.RetryField<any>): Object {
+        return {
+            Retry: field.getRetries().map((retrier) => {
+                let retrierData = {
+                    ErrorEquals: retrier.getErrorTypes(),
+                }
+                if (retrier.getMaxAttempts() !== null) {
+                    Object.assign(retrierData, { MaxAttempts: retrier.getMaxAttempts() });
+                }
+                if (retrier.getBackoffRate() !== null) {
+                    Object.assign(retrierData, { BackoffRate: retrier.getBackoffRate() });
+                }
+                if (retrier.getMaxAttempts() !== null) {
+                    Object.assign(retrierData, { MaxAttempts: retrier.getMaxAttempts() });
+                }
+                if (retrier.getInterval() !== null) {
+                    Object.assign(retrierData, { IntervalSeconds: retrier.getInterval() });
+                }
+                return retrierData;
+            })
+        }
+    }
+
     generateCatchField(field: fields.CatchField<any>): Object {
         return {
             Catch: field.getCatchers().map((cacher) => {
@@ -71,10 +95,20 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateTask(task: states.Task): Object {
-        return {
+        let data = {
             Type: 'Task',
             Resource: task.getResource()
+        };
+
+        if (task.getHeartbeat() !== null) {
+            data['HeartbeatSeconds'] = task.getHeartbeat();
         }
+
+        if (task.getTimeout() !== null) {
+            data['TimeoutSeconds'] = task.getTimeout();
+        }
+
+        return data;
     }
 
     generateState(state: states.State) {

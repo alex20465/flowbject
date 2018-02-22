@@ -1,10 +1,7 @@
 import { expect } from 'chai';
 import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
-import { NextField } from '../src/fields';
-import { Pass } from '../src/states/Pass';
-import { State } from '../src/states';
 import { StateMachine } from '../src/StateMachine';
-import { Task } from '../src/states/Task';
+import { State, Pass, Task } from '../src/states';
 
 describe('AWSStepFunctions', () => {
     describe('generateField', () => {
@@ -43,6 +40,8 @@ describe('AWSStepFunctions', () => {
             const stateNotFoundTask = new Task('notFoundHandler');
             const state = (new Task('foo'))
                 .setResource('XY')
+                .setTimeout(30)
+                .setHeartbeat(10)
                 .next.end();
 
             // setup not found catcher
@@ -53,6 +52,8 @@ describe('AWSStepFunctions', () => {
             expect(data).to.deep.equal({
                 Type: 'Task',
                 Resource: 'XY',
+                TimeoutSeconds: 30,
+                HeartbeatSeconds: 10,
                 End: true,
                 Catch: [
                     {
@@ -92,6 +93,30 @@ describe('AWSStepFunctions', () => {
                         ErrorEquals: ["FatalError", "ServerError"],
                         Next: "fatalErrorHandler",
                         ResultPath: "$.errorMessage"
+                    }
+                ]
+            });
+        });
+
+        it('should generate state task with retries', () => {
+            const state = (new Task('foo')).setResource('XY').next.end();
+            const retrier = state.retry.timeout();
+            retrier.setBackoffRate(3);
+            retrier.setMaxAttempts(3);
+            retrier.setInterval(2);
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Task',
+                Resource: 'XY',
+                End: true,
+                Retry: [
+                    {
+                        ErrorEquals: [
+                            'States.Timeout'
+                        ],
+                        BackoffRate: 3,
+                        IntervalSeconds: 2,
+                        MaxAttempts: 3
                     }
                 ]
             });

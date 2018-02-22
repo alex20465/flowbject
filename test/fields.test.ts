@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as fields from '../src/fields';
 import { Pass, Task } from '../src/states';
+import { ERROR_CODES } from '../src/fields/RetryField';
 
 
 function createTestState(): Pass {
@@ -156,7 +157,7 @@ describe('Fields', () => {
         it('should validate with error: "requires configuration setup"', () => {
             const mockReportState = new Task('report');
             state.catch.errors(['test']); // requires next setup
-            const {message} = state.catch.validate();
+            const { message } = state.catch.validate();
             expect(message).to.contain('requires configuration setup');
         });
 
@@ -165,6 +166,30 @@ describe('Fields', () => {
             state.catch.errors(['test']).next.end();
             const error = state.catch.validate();
             expect(error).to.be.null;
+        });
+    });
+
+    describe('RetryField', () => {
+        let field: fields.RetryField<Task>;
+        let state: Task;
+        beforeEach(() => {
+            state = new Task('foo');
+            field = new fields.RetryField(state);
+        });
+
+        it('should validate without error', () => {
+            const error = state.retry.validate();
+            expect(error).to.be.null;
+        });
+
+        it('should create timeout retry', () => {
+            const retrier = state.retry.timeout();
+            expect(retrier.getErrorTypes()).to.deep.equal([ERROR_CODES.TIMEOUT]);
+        });
+
+        it('should receive configuration after timeout retry registration', () => {
+            const retrier = state.retry.timeout();
+            expect(state.retry.isConfigured()).to.be.equal(true);
         });
     });
 })
