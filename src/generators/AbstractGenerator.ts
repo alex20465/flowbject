@@ -2,7 +2,9 @@ import * as fields from '../fields';
 import * as states from '../states';
 import { StateMachine } from '../StateMachine';
 
-
+/**
+ * @todo: Implement abstract missing generator methods: Parallel etc.
+ */
 export abstract class AbstractGenerator {
     abstract generateStateMachine(stateMachine: StateMachine): Object;
     abstract generateNextField(field: fields.NextField<any>): Object;

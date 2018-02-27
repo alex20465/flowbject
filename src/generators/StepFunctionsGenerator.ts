@@ -88,6 +88,23 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             })
         }
     }
+
+    generateParallel(state: states.Parallel): Object {
+        const data = {
+            Type: 'Parallel'
+        };
+        data['Branches'] = state.getBranches().map((branch) => {
+            return {
+                StartAt: branch.getStartAt().getName(),
+                States: branch.getStates().reduce((data, state: states.State) => {
+                    data[state.getName()] = this.generateState(state);
+                    return data;
+                }, {})
+            };
+        });
+        return data;
+    }
+
     generatePass(state: states.Pass): Object {
         return {
             Type: 'Pass'

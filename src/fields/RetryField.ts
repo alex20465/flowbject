@@ -31,7 +31,7 @@ export class Retrier<T extends State> {
         this.errorTypes = errorTypes;
     }
     getErrorTypes() {
-        return this.errorTypes.splice(0);
+        return this.errorTypes.slice(0);
     }
     setInterval(interval: number) {
         this.interval = interval;
@@ -64,7 +64,7 @@ export class RetryField<T extends State> extends Field<T> {
         this.retriers = [];
     }
 
-    getRetries() { return this.retriers.splice(0) }
+    getRetries() { return this.retriers.slice(0) }
 
     private addInternalRetrier(errorCode: ERROR_CODES): Retrier<T> {
         const retrier = new Retrier<T>(this.getParentState());

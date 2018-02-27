@@ -22,7 +22,7 @@ export class ErrorCacher<T extends State> {
     }
 
     getErrors() {
-        return this.errors.splice(0);
+        return this.errors.slice(0);
     }
 
     validate() {
@@ -51,7 +51,7 @@ export class CatchField<T extends State> extends Field<T> {
         return catcher;
     }
     getCatchers(): ErrorCacher<T>[] {
-        return this.catchers.splice(0);
+        return this.catchers.slice(0);
     }
     validate() {
         const error = super.validate();

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
 import { StateMachine } from '../src/StateMachine';
-import { State, Pass, Task } from '../src/states';
+import { State, Pass, Task, Parallel } from '../src/states';
 
 describe('AWSStepFunctions', () => {
     describe('generateField', () => {
@@ -62,6 +62,45 @@ describe('AWSStepFunctions', () => {
                     },
                 ]
             });
+        });
+
+        it('should generate state parallel', () => {
+            const generateImage = new Parallel('generateImage');
+
+            const generateThumbnail = new Task('generateThumbail').setResource('arn::xy').next.end();
+            const generatePortrait = new Task('generatePortrait').setResource('arn::xy').next.end();
+
+            generateImage.addBranch().addState(generateThumbnail);
+            generateImage.addBranch().addState(generatePortrait);
+            generateImage.next.end();
+            const data = generator.generateState(generateImage);
+
+            expect(data).to.deep.equal({
+                Type: "Parallel",
+                Branches: [
+                    {
+                        StartAt: "generateThumbail",
+                        States: {
+                            generateThumbail: {
+                                Type: "Task",
+                                Resource: "arn::xy",
+                                End: true
+                            }
+                        }
+                    },
+                    {
+                        StartAt: "generatePortrait",
+                        States: {
+                            generatePortrait: {
+                                Type: "Task",
+                                Resource: "arn::xy",
+                                End: true
+                            }
+                        }
+                    }
+                ],
+                End: true
+            })
         });
 
         it('should generate complex state task', () => {

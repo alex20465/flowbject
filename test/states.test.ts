@@ -37,48 +37,101 @@ describe('States', () => {
         });
     });
 
-    describe('Task', () => {
-        let state: states.Task;
+    describe('Parallel', () => {
+        let state: states.Parallel;
+        let notifyUser: states.Task;
+        let deleteRecord: states.Task;
+
         beforeEach(() => {
-            state = new states.Task("TestState");
+            state = new states.Parallel("TestState");
+            notifyUser = new states.Task('notifyUser');
+            deleteRecord = new states.Task('deleteRecord');
         });
 
-        it('should provide instance of ResultPathField', () => {
-            expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
-        });
-        it('should provide instance of PathField', () => {
-            expect(state.path).to.be.instanceof(fields.PathField);
-        });
-        it('should provide instance of ResultField', () => {
-            expect(state.result).to.be.instanceof(fields.ResultField);
-        });
-        it('should provide instance of NextField', () => {
-            expect(state.next).to.be.instanceof(fields.NextField);
-        });
-
-        it('should require resource definition', () => {
+        it('should be a valid parallel state', () => {
+            state.addBranch().addState(notifyUser);
+            state.addBranch().addState(deleteRecord);
+            state.next.end();
             const errors = state.validate();
-            const errorMessages = errors.join('');
-            expect(errorMessages).to.contain('"resource" is not required')
-        });
-
-        it('should require NextField configuration', () => {
-            const errors = state.validate();
-            const errorMessages = errors.join('');
-            expect(errorMessages).to.contain('field NextField requires configuration setup');
-        });
-
-        it('should be valid with nextField and resource setup', () => {
-            const errors = state
-                .next.end()
-                .setResource('thisIsMyResource')
-                .validate();
             expect(errors).lengthOf(0);
         });
 
-        it('should provide defined resource reference', () => {
-            const resourceReference = state.setResource('thisIsMyResource').getResource();
-            expect(resourceReference).to.be.equal('thisIsMyResource');
+        it('should be invalid without branch states', () => {
+            state.addBranch();
+            state.addBranch().addState(deleteRecord);
+            state.next.end();
+            const errors = state.validate();
+            expect(errors).lengthOf(1);
+            expect(errors[0].message).to.contain('branch does not contain any start-at');
         });
+
+        it('should provide all encapsulated instance (branches, states)', () => {
+            state.addBranch().addState(notifyUser);
+            state.addBranch().addState(deleteRecord);
+            state.next.end();
+            const branches = state.getBranches();
+
+            expect(branches).lengthOf(2);
+            const [notifyUserBranch, deleteRecordBranch] = branches;
+
+            expect(notifyUserBranch.getStates()).lengthOf(1);
+            expect(deleteRecordBranch.getStates()).lengthOf(1);
+            expect(notifyUserBranch.getStates()).lengthOf(1);
+            expect(deleteRecordBranch.getStates()).lengthOf(1);
+
+            expect(notifyUserBranch.getStartAt()).to.be.equal(notifyUser);
+            expect(deleteRecordBranch.getStartAt()).to.be.equal(deleteRecord);
+
+            const [notifyUserState] = notifyUserBranch.getStates();
+            const [deleteRecordState] = deleteRecordBranch.getStates();
+
+            expect(deleteRecordState.getName()).to.be.equal('deleteRecord');
+            expect(notifyUserState.getName()).to.be.equal('notifyUser');
     });
+});
+
+describe('Task', () => {
+    let state: states.Task;
+    beforeEach(() => {
+        state = new states.Task("TestState");
+    });
+
+    it('should provide instance of ResultPathField', () => {
+        expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
+    });
+    it('should provide instance of PathField', () => {
+        expect(state.path).to.be.instanceof(fields.PathField);
+    });
+    it('should provide instance of ResultField', () => {
+        expect(state.result).to.be.instanceof(fields.ResultField);
+    });
+    it('should provide instance of NextField', () => {
+        expect(state.next).to.be.instanceof(fields.NextField);
+    });
+
+    it('should require resource definition', () => {
+        const errors = state.validate();
+        const errorMessages = errors.join('');
+        expect(errorMessages).to.contain('"resource" is not required')
+    });
+
+    it('should require NextField configuration', () => {
+        const errors = state.validate();
+        const errorMessages = errors.join('');
+        expect(errorMessages).to.contain('field NextField requires configuration setup');
+    });
+
+    it('should be valid with nextField and resource setup', () => {
+        const errors = state
+            .next.end()
+            .setResource('thisIsMyResource')
+            .validate();
+        expect(errors).lengthOf(0);
+    });
+
+    it('should provide defined resource reference', () => {
+        const resourceReference = state.setResource('thisIsMyResource').getResource();
+        expect(resourceReference).to.be.equal('thisIsMyResource');
+    });
+});
 });

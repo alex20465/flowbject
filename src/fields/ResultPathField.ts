@@ -1,6 +1,7 @@
 import { Field } from "./Field";
 import { State } from "../states/State";
 import { validateJSONPath } from '../utils';
+
 export class ResultPathField<T extends State> extends Field<T> {
     required: false;
     private path: string | null = null;
