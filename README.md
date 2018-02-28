@@ -65,12 +65,10 @@ const stepFunctionsJSON = generator.generateStateMachine(stateMachine);
 
 ### Not implemented states
 
-- Task
 - Choice
 - Wait
 - Succeeed
 - Fail
-- Parallel
 
 
 third party features using this package.

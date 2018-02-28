@@ -87,51 +87,72 @@ describe('States', () => {
 
             expect(deleteRecordState.getName()).to.be.equal('deleteRecord');
             expect(notifyUserState.getName()).to.be.equal('notifyUser');
-    });
-});
-
-describe('Task', () => {
-    let state: states.Task;
-    beforeEach(() => {
-        state = new states.Task("TestState");
+        });
     });
 
-    it('should provide instance of ResultPathField', () => {
-        expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
-    });
-    it('should provide instance of PathField', () => {
-        expect(state.path).to.be.instanceof(fields.PathField);
-    });
-    it('should provide instance of ResultField', () => {
-        expect(state.result).to.be.instanceof(fields.ResultField);
-    });
-    it('should provide instance of NextField', () => {
-        expect(state.next).to.be.instanceof(fields.NextField);
+    describe('Task', () => {
+        let state: states.Task;
+        beforeEach(() => {
+            state = new states.Task("TestState");
+        });
+
+        it('should provide instance of ResultPathField', () => {
+            expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
+        });
+        it('should provide instance of PathField', () => {
+            expect(state.path).to.be.instanceof(fields.PathField);
+        });
+        it('should provide instance of ResultField', () => {
+            expect(state.result).to.be.instanceof(fields.ResultField);
+        });
+        it('should provide instance of NextField', () => {
+            expect(state.next).to.be.instanceof(fields.NextField);
+        });
+
+        it('should require resource definition', () => {
+            const errors = state.validate();
+            const errorMessages = errors.join('');
+            expect(errorMessages).to.contain('"resource" is not required')
+        });
+
+        it('should require NextField configuration', () => {
+            const errors = state.validate();
+            const errorMessages = errors.join('');
+            expect(errorMessages).to.contain('field NextField requires configuration setup');
+        });
+
+        it('should be valid with nextField and resource setup', () => {
+            const errors = state
+                .next.end()
+                .setResource('thisIsMyResource')
+                .validate();
+            expect(errors).lengthOf(0);
+        });
+
+        it('should provide defined resource reference', () => {
+            const resourceReference = state.setResource('thisIsMyResource').getResource();
+            expect(resourceReference).to.be.equal('thisIsMyResource');
+        });
     });
 
-    it('should require resource definition', () => {
-        const errors = state.validate();
-        const errorMessages = errors.join('');
-        expect(errorMessages).to.contain('"resource" is not required')
-    });
+    describe('Choice', () => {
+        let state: states.Choice;
+        let fooTask: states.Task;
+        beforeEach(() => {
+            state = new states.Choice("TestState");
+            fooTask = new states.Task("fooTask").setResource('XY');
+        });
 
-    it('should require NextField configuration', () => {
-        const errors = state.validate();
-        const errorMessages = errors.join('');
-        expect(errorMessages).to.contain('field NextField requires configuration setup');
-    });
+        it('should add root boolean-equals operation', () => {
+            state
+                .addOperation(states.CHOICE_RULE.BOOLEAN_EQUALS)
+                .setVariableOperand('$.test')
+                .setValueOperand(true);
+        });
 
-    it('should be valid with nextField and resource setup', () => {
-        const errors = state
-            .next.end()
-            .setResource('thisIsMyResource')
-            .validate();
-        expect(errors).lengthOf(0);
+        it('should throw error while trying to set operant reference to logical operator', () => {
+            state.addOperation(states.CHOICE_RULE.AND)
+                .setVariableOperand('$.test');
+        });
     });
-
-    it('should provide defined resource reference', () => {
-        const resourceReference = state.setResource('thisIsMyResource').getResource();
-        expect(resourceReference).to.be.equal('thisIsMyResource');
-    });
-});
 });
