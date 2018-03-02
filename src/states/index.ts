@@ -10,5 +10,6 @@ export {
     ChoiceLogicOperator,
     ChoiceOperation,
     ChoiceOperator,
-    CHOICE_RULE
+    CHOICE_LOGIC_RULE,
+    CHOICE_COMPARATOR_RULE
 } from './Choice';
