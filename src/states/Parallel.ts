@@ -31,6 +31,7 @@ export class ParallelBranch {
         if (!this.startAt) {
             return new Error('Parallel branch does not contain any start-at state');
         }
+        // todo: validate added states
         return null;
     }
 }

@@ -87,51 +87,191 @@ describe('States', () => {
 
             expect(deleteRecordState.getName()).to.be.equal('deleteRecord');
             expect(notifyUserState.getName()).to.be.equal('notifyUser');
-    });
-});
-
-describe('Task', () => {
-    let state: states.Task;
-    beforeEach(() => {
-        state = new states.Task("TestState");
+        });
     });
 
-    it('should provide instance of ResultPathField', () => {
-        expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
-    });
-    it('should provide instance of PathField', () => {
-        expect(state.path).to.be.instanceof(fields.PathField);
-    });
-    it('should provide instance of ResultField', () => {
-        expect(state.result).to.be.instanceof(fields.ResultField);
-    });
-    it('should provide instance of NextField', () => {
-        expect(state.next).to.be.instanceof(fields.NextField);
+    describe('Task', () => {
+        let state: states.Task;
+        beforeEach(() => {
+            state = new states.Task("TestState");
+        });
+
+        it('should provide instance of ResultPathField', () => {
+            expect(state.resultPath).to.be.instanceof(fields.ResultPathField);
+        });
+        it('should provide instance of PathField', () => {
+            expect(state.path).to.be.instanceof(fields.PathField);
+        });
+        it('should provide instance of ResultField', () => {
+            expect(state.result).to.be.instanceof(fields.ResultField);
+        });
+        it('should provide instance of NextField', () => {
+            expect(state.next).to.be.instanceof(fields.NextField);
+        });
+
+        it('should require resource definition', () => {
+            const errors = state.validate();
+            const errorMessages = errors.join('');
+            expect(errorMessages).to.contain('"resource" is not required')
+        });
+
+        it('should require NextField configuration', () => {
+            const errors = state.validate();
+            const errorMessages = errors.join('');
+            expect(errorMessages).to.contain('field NextField requires configuration setup');
+        });
+
+        it('should be valid with nextField and resource setup', () => {
+            const errors = state
+                .next.end()
+                .setResource('thisIsMyResource')
+                .validate();
+            expect(errors).lengthOf(0);
+        });
+
+        it('should provide defined resource reference', () => {
+            const resourceReference = state.setResource('thisIsMyResource').getResource();
+            expect(resourceReference).to.be.equal('thisIsMyResource');
+        });
     });
 
-    it('should require resource definition', () => {
-        const errors = state.validate();
-        const errorMessages = errors.join('');
-        expect(errorMessages).to.contain('"resource" is not required')
-    });
+    describe('Choice', () => {
+        let state: states.Choice;
+        let fooTask: states.Task;
+        beforeEach(() => {
+            state = new states.Choice("TestState");
+            fooTask = new states.Task("fooTask").setResource('XY');
+        });
 
-    it('should require NextField configuration', () => {
-        const errors = state.validate();
-        const errorMessages = errors.join('');
-        expect(errorMessages).to.contain('field NextField requires configuration setup');
-    });
+        it('should add root boolean-equals operation', () => {
+            state
+                .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariableOperand('$.test')
+                .setValueOperand(true);
+        });
 
-    it('should be valid with nextField and resource setup', () => {
-        const errors = state
-            .next.end()
-            .setResource('thisIsMyResource')
-            .validate();
-        expect(errors).lengthOf(0);
-    });
+        it('should add root AND logical operation', () => {
+            const rootOperation = state
+                .addLogicOperation(states.CHOICE_LOGIC_RULE.AND);
+            const nestedOperation = rootOperation
+                .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS);
 
-    it('should provide defined resource reference', () => {
-        const resourceReference = state.setResource('thisIsMyResource').getResource();
-        expect(resourceReference).to.be.equal('thisIsMyResource');
+            expect(rootOperation.next).to.not.be.null;
+            expect(nestedOperation.next).to.be.null; // nested operations have not next field
+        });
+
+        it('should add multiple nested operations', () => {
+            const rootOperation = state
+                .addLogicOperation(states.CHOICE_LOGIC_RULE.AND)
+            rootOperation.next.end();
+
+            const operationDepth1 = rootOperation
+                .addLogicOperation(states.CHOICE_LOGIC_RULE.OR);
+
+            const operationDepth2 = operationDepth1
+                .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
+                .setVariableOperand('$.test')
+                .setValueOperand(22);
+
+            const operationDepth2_2 = operationDepth1
+                .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariableOperand('$.test2')
+                .setValueOperand(false);
+
+            rootOperation
+                .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariableOperand('$.isAccepted')
+                .setValueOperand(true);
+
+            const errors = state.validate();
+            expect(errors).lengthOf(0);
+        });
+
+        describe('validation', () => {
+            it('should validate with errors when no root operations are added', () => {
+                const [error] = state.validate();
+                expect(error.message).to.contain('requires at least ONE operation');
+            })
+            it('should validate with errors with no operations are added', () => {
+                const rootOperation = state
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.AND);
+                const [error] = rootOperation.validate();
+                expect(error.message).to.contain('require exactly TWO nested operations');
+            });
+            it('should validate without errors with correct configrations', () => {
+                const rootOperation = state
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.AND)
+                rootOperation.next.end();
+
+                rootOperation
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariableOperand('$.isAvailable')
+                    .setValueOperand(true);
+
+                rootOperation
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariableOperand('$.isAccepted')
+                    .setValueOperand(true);
+                const errors = state.validate();
+                expect(errors).lengthOf(0);
+            });
+
+            it('should detect errors of nested operations (depth 1)', () => {
+                const rootOperation = state
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.AND)
+                rootOperation.next.end();
+
+                rootOperation
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setValueOperand(true);
+
+                rootOperation
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariableOperand('$.isAccepted')
+                    .setValueOperand(true);
+                const errors = state.validate();
+                expect(errors).lengthOf(1);
+                expect(errors[0].message).to.contain('Variable operand of comparator is required');
+            });
+
+            it('should throw error when trying to add invalid value type to comparator rule BOOLEAN_EQUALS', () => {
+                const rootOperation = state
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.AND)
+                rootOperation.next.end();
+
+                expect(() => {
+                    rootOperation
+                        .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                        .setValueOperand("invalid");
+                }).throws(Error, 'does not support value type');
+            });
+
+            it('should detect errors of nested operations (depth 2)', () => {
+                const rootOperation = state
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.AND)
+                rootOperation.next.end();
+
+                const operationDepth1 = rootOperation
+                    .addLogicOperation(states.CHOICE_LOGIC_RULE.OR);
+
+                const operationDepth2 = operationDepth1
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
+                    .setVariableOperand('$.test')
+                    .setValueOperand(22);
+                const operationDepth2_2 = operationDepth1
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariableOperand('$.test2')
+
+                rootOperation
+                    .addComparatorOperation(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariableOperand('$.isAccepted')
+                    .setValueOperand(true);
+
+                const errors = state.validate();
+
+                expect(errors).lengthOf(1);
+                expect(errors[0].message).to.contain('Value operand of comparator is required');
+            });
+        });
     });
-});
 });
