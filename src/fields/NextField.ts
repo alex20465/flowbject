@@ -20,7 +20,7 @@ export class NextField<T extends State> extends Field<T> {
         }
     }
 
-    toState(target: State | string): T {
+    to(target: State | string): T {
         if (target instanceof State) {
             this.nextTargetName = target.getName();
         } else {

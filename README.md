@@ -25,7 +25,7 @@ const getItem = new Task('getItem').setResource('arn..');
 const createItem = new Task('createItem').setResource('arn..');
 
 getItem
-    .catch.errors(['NotFoundError']).next.toState(createItem);
+    .catch.errors(['NotFoundError']).next.to(createItem);
 ```
 
 Setup retry:

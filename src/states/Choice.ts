@@ -59,11 +59,11 @@ const ComparatorSupportedType: { [k: string]: CHOICE_COMPARATOR_RULE[] } = {
 }
 
 export abstract class ChoiceOperation {
-    protected rule: CHOICE_COMPARATOR_RULE|CHOICE_LOGIC_RULE;
+    protected rule: CHOICE_COMPARATOR_RULE | CHOICE_LOGIC_RULE;
     protected parentState: Choice;
     public next: NextField<Choice> | null;
 
-    constructor(state: Choice, rule: CHOICE_COMPARATOR_RULE|CHOICE_LOGIC_RULE, options: ChoiceOperationOptions = {}) {
+    constructor(state: Choice, rule: CHOICE_COMPARATOR_RULE | CHOICE_LOGIC_RULE, options: ChoiceOperationOptions = {}) {
         this.rule = rule;
         if (options.allowNext === false) {
             this.next = null;
@@ -74,6 +74,10 @@ export abstract class ChoiceOperation {
     }
 
     abstract validate(): Error[];
+
+    getRule() {
+        return this.rule;
+    }
 }
 
 export class ChoiceLogicOperation extends ChoiceOperation {
@@ -84,23 +88,28 @@ export class ChoiceLogicOperation extends ChoiceOperation {
         this.nestedOperations = [];
     }
 
-    addComparatorOperation(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
+    compare(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
         const operation = new ChoiceComparatorOperation(this.parentState, rule, { allowNext: false });
         this.nestedOperations.push(operation);
         return operation;
     }
 
-    addLogicOperation(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
+    logic(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
         const operation = new ChoiceLogicOperation(this.parentState, rule, { allowNext: false });
+        const currentRule = this.getRule();
+
         this.nestedOperations.push(operation);
         return operation;
     }
 
+    getOperations() {
+        return this.nestedOperations.slice(0);
+    }
+
     validate() {
         const errors: Error[] = [];
-
-        if ((this.rule === CHOICE_LOGIC_RULE.AND || this.rule === CHOICE_LOGIC_RULE.OR) && this.nestedOperations.length !== 2) {
-            errors.push(new Error('Logical operators [AND|OR] require exactly TWO nested operations'));
+        if ((this.rule === CHOICE_LOGIC_RULE.AND || this.rule === CHOICE_LOGIC_RULE.OR) && this.nestedOperations.length < 2) {
+            errors.push(new Error('Logical operators [AND|OR] require at least TWO nested operations'));
         } else if (this.rule === CHOICE_LOGIC_RULE.NOT && this.nestedOperations.length !== 1) {
             errors.push(new Error('Logical operator [NOT] requires exactly ONE nested operations'));
         }
@@ -122,16 +131,24 @@ export class ChoiceComparatorOperation extends ChoiceOperation {
     private valueOperand: OperandValueType;
     private variableOperand: string;
 
-    setValueOperand(value: OperandValueType) {
+    equals(value: OperandValueType) {
 
         assertComparatorSupportsValue(value, <CHOICE_COMPARATOR_RULE>this.rule);
         this.valueOperand = value;
         return this;
     }
 
-    setVariableOperand(variable: string) {
+    variable(variable: string) {
         this.variableOperand = variable;
         return this;
+    }
+
+    getValue(): OperandValueType {
+        return this.valueOperand;
+    }
+
+    getVariable(): string {
+        return this.variableOperand;
     }
 
     validate() {
@@ -149,20 +166,30 @@ export class ChoiceComparatorOperation extends ChoiceOperation {
 
 export class Choice extends State {
     private operations: ChoiceOperation[];
-    private default: State;
+    private default: State | null;
 
     constructor(name: string) {
         super(name);
         this.operations = [];
+        this.default = null;
     }
 
-    addComparatorOperation(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
+    getDefault() {
+        return this.default;
+    }
+
+    defaultTo(state: State) {
+        this.default = state;
+        return this;
+    }
+
+    compare(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
         const operation = new ChoiceComparatorOperation(this, rule);
         this.operations.push(operation);
         return operation;
     }
 
-    addLogicOperation(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
+    logic(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
         const operation = new ChoiceLogicOperation(this, rule);
         this.operations.push(operation);
         return operation;
@@ -181,6 +208,10 @@ export class Choice extends State {
         }, []);
 
         return errors.concat(operationsErrors);
+    }
+
+    getOperations() {
+        return this.operations.slice(0);
     }
 }
 

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
 import { StateMachine } from '../src/StateMachine';
-import { State, Pass, Task, Parallel } from '../src/states';
+import { State, Pass, Task, Parallel, Choice, CHOICE_COMPARATOR_RULE, CHOICE_LOGIC_RULE } from '../src/states';
 
 describe('AWSStepFunctions', () => {
     describe('generateField', () => {
@@ -46,7 +46,7 @@ describe('AWSStepFunctions', () => {
 
             // setup not found catcher
             const notFoundCatcher = state.catch.errors(['NotFoundError']);
-            notFoundCatcher.next.toState(stateNotFoundTask);
+            notFoundCatcher.next.to(stateNotFoundTask);
 
             const data = generator.generateState(state);
             expect(data).to.deep.equal({
@@ -111,11 +111,11 @@ describe('AWSStepFunctions', () => {
 
             // setup not found catcher
             const notFoundCatcher = state.catch.errors(['NotFoundError']);
-            notFoundCatcher.next.toState(stateNotFoundTask);
+            notFoundCatcher.next.to(stateNotFoundTask);
 
             // setup fatal error catcher
             const fatalErrorCatcher = state.catch.errors(['FatalError', 'ServerError']);
-            fatalErrorCatcher.next.toState(fatalErrorTask);
+            fatalErrorCatcher.next.to(fatalErrorTask);
             fatalErrorCatcher.resultPath.set('$.errorMessage');
 
             const data = generator.generateState(state);
@@ -160,6 +160,115 @@ describe('AWSStepFunctions', () => {
                 ]
             });
         });
+
+        it('should generate simple comparator state choice operation', () => {
+            const handleFoo = (new Task('foo')).setResource('xy').next.end();
+            const handleBar = (new Task('bar')).setResource('xy').next.end();
+
+            const state = (new Choice('isFoo'));
+
+            state.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .variable('$.type')
+                .equals('foo')
+                .next.to(handleFoo);
+
+            state.defaultTo(handleBar);
+
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Choice',
+                Choices: [
+                    {
+                        StringEquals: 'foo',
+                        Variable: '$.type',
+                        Next: 'foo'
+                    }
+                ],
+                Default: 'bar'
+            });
+        });
+
+        it('should generate simple logic state choice operation', () => {
+            const handleFoo = (new Task('foo')).setResource('xy').next.end();
+            const handleBar = (new Task('bar')).setResource('xy').next.end();
+
+            const state = (new Choice('isFoo'));
+            const andOperation = state.logic(CHOICE_LOGIC_RULE.AND);
+
+
+            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .variable('$.type')
+                .equals('foo')
+
+            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .variable('$.secondType')
+                .equals('foo')
+
+            andOperation.next.to(handleFoo);
+            state.defaultTo(handleBar);
+
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Choice',
+                Choices: [
+                    {
+                        And: [
+                            {
+                                Variable: '$.type',
+                                StringEquals: 'foo'
+                            },
+                            {
+                                Variable: '$.secondType',
+                                StringEquals: 'foo'
+                            }
+                        ],
+                        Next: 'foo'
+                    }
+                ],
+                Default: 'bar'
+            });
+        });
+
+        it('should generate complex nested logic state choice operation', () => {
+            const handleFoo = (new Task('foo')).setResource('xy').next.end();
+            const handleBar = (new Task('bar')).setResource('xy').next.end();
+
+            const state = (new Choice('isFoo'));
+            const andOperation = state.logic(CHOICE_LOGIC_RULE.AND);
+
+
+            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .variable('$.type').equals('foo')
+
+            andOperation.logic(CHOICE_LOGIC_RULE.NOT)
+                .compare(CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS).variable('$.test').equals(false);
+
+            andOperation.next.to(handleFoo);
+            state.defaultTo(handleBar);
+
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({
+                Type: 'Choice',
+                Choices: [
+                    {
+                        And: [
+                            {
+                                Variable: '$.type',
+                                StringEquals: 'foo'
+                            },
+                            {
+                                Not: {
+                                    Variable: "$.test",
+                                    BooleanEquals: false
+                                }
+                            }
+                        ],
+                        Next: 'foo'
+                    }
+                ],
+                Default: 'bar'
+            });
+        });
     });
 
     describe('generateStateMachine', () => {
@@ -176,7 +285,7 @@ describe('AWSStepFunctions', () => {
             fooState = (new Pass('foo'))
                 .path.setInput('$.test')
                 .path.setOutput('$.test2')
-                .next.toState(barState);
+                .next.to(barState);
 
             stateMachine = (new StateMachine())
                 .addState(fooState)

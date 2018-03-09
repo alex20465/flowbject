@@ -6,10 +6,9 @@ export { Parallel } from './Parallel';
 
 export {
     Choice,
-    ChoiceComparatorOperator,
-    ChoiceLogicOperator,
     ChoiceOperation,
-    ChoiceOperator,
+    ChoiceLogicOperation,
+    ChoiceComparatorOperation,
     CHOICE_LOGIC_RULE,
     CHOICE_COMPARATOR_RULE
 } from './Choice';

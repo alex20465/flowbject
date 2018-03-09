@@ -3,6 +3,32 @@ import { StateMachine } from "../StateMachine";
 import * as fields from '../fields';
 import * as states from '../states';
 
+
+const ComparatorRuleMap = {
+    [states.CHOICE_COMPARATOR_RULE.STRING_EQUALS]: 'StringEquals',
+    [states.CHOICE_COMPARATOR_RULE.STRING_LESS_THAN]: 'StringLessThan',
+    [states.CHOICE_COMPARATOR_RULE.STRING_GREATER_THAN]: 'StringGreaterThan',
+    [states.CHOICE_COMPARATOR_RULE.STRING_LESS_THAN_EQUALS]: 'StringLessThanEquals',
+    [states.CHOICE_COMPARATOR_RULE.STRING_GREATER_THAN_EQUALS]: 'StringGreaterThanEquals',
+    [states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS]: 'NumericEquals',
+    [states.CHOICE_COMPARATOR_RULE.NUMERIC_LESS_THAN]: 'NumericLessThan',
+    [states.CHOICE_COMPARATOR_RULE.NUMERIC_GREATER_THAN]: 'NumericGreaterThan',
+    [states.CHOICE_COMPARATOR_RULE.NUMERIC_LESS_THAN_EQUALS]: 'NumericLessThanEquals',
+    [states.CHOICE_COMPARATOR_RULE.NUMERIC_GREATER_THAN_EQUALS]: 'NumericGreaterThanEquals',
+    [states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS]: 'BooleanEquals',
+    [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_EQUALS]: 'TimestampEquals',
+    [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_LESS_THAN]: 'TimestampLessThan',
+    [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_GREATER_THAN]: 'TimestampGreaterThan',
+    [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_LESS_THAN_EQUALS]: 'TimestampLessThanEquals',
+    [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_GREATER_THAN_EQUALS]: 'TimestampGreaterThanEquals',
+};
+
+const LogicRuleMap = {
+    [states.CHOICE_LOGIC_RULE.AND]: 'And',
+    [states.CHOICE_LOGIC_RULE.OR]: 'Or',
+    [states.CHOICE_LOGIC_RULE.NOT]: 'Not',
+}
+
 export class StepFunctionsGenerator extends AbstractGenerator {
     generateStateMachine(stateMachine: StateMachine) {
         const data = {
@@ -42,9 +68,11 @@ export class StepFunctionsGenerator extends AbstractGenerator {
         }
         return data;
     }
+
     generateResultField(field: fields.ResultField<any>): Object {
         return { Result: field.getAll() };
     }
+
     generateResultPathField(field: fields.ResultPathField<any>): Object {
         return {
             ResultPath: field.get()
@@ -102,6 +130,47 @@ export class StepFunctionsGenerator extends AbstractGenerator {
                 }, {})
             };
         });
+        return data;
+    }
+
+    private generateChoiceOperation(operation: states.ChoiceOperation) {
+        let data = {};
+        if (operation instanceof states.ChoiceLogicOperation) {
+            const rule = operation.getRule();
+            let ruleKeyword = LogicRuleMap[operation.getRule()];
+            if (rule === states.CHOICE_LOGIC_RULE.NOT) {
+                data[ruleKeyword] = this.generateChoiceOperation(operation.getOperations()[0]);
+            } else {
+                data[ruleKeyword] = operation.getOperations().map((operation) => {
+                    return this.generateChoiceOperation(operation);
+                });
+            }
+        } else if (operation instanceof states.ChoiceComparatorOperation) {
+            let RuleKeyword = ComparatorRuleMap[operation.getRule()];
+            data[RuleKeyword] = operation.getValue();
+            data['Variable'] = operation.getVariable();
+        }
+
+        if (operation.next) {
+            data = Object.assign(data, this.generateNextField(operation.next));
+        }
+
+        return data;
+    }
+
+    generateChoice(state: states.Choice) {
+        const data = {
+            Type: 'Choice'
+        };
+
+        data['Choices'] = state.getOperations().map((operator) => {
+            return this.generateChoiceOperation(operator);
+        });
+
+        const defaultState = state.getDefault();
+        if (defaultState !== null) {
+            data['Default'] = defaultState.getName();
+        }
         return data;
     }
 
