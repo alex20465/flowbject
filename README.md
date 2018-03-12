@@ -63,14 +63,6 @@ const stepFunctionsJSON = generator.generateStateMachine(stateMachine);
 
 ## TODO
 
-### Not implemented states
-
-- Choice
-- Wait
-- Succeeed
-- Fail
-
-
 third party features using this package.
 
 - Flow validation

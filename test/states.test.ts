@@ -274,4 +274,48 @@ describe('States', () => {
             });
         });
     });
+
+    describe('Wait', () => {
+        let state: states.Wait;
+
+        beforeEach(() => {
+            state = new states.Wait('waitFor');
+        });
+
+        it('should set seconds', () => {
+            state.for(10);
+            expect(state.getSeconds()).to.be.equal(10);
+        });
+
+        it('should throw error when trying to set negative number as seconds', () => {
+            expect(() => {
+                state.for(-10);
+            }).to.throw(Error, 'Seconds can not be negative');
+        });
+
+        it('should respond with validation error when wait-seconds are not defined', () => {
+            const errors = state.next.end().validate();
+
+            expect(errors).lengthOf(1);
+            expect(errors[0].message).to.contain('state requires "seconds" definition');
+        });
+    });
+
+    describe('Fail', () => {
+        let fail: states.Fail;
+
+        beforeEach(() => {
+            fail = new states.Fail('failState');
+        });
+
+        it('should get correct error type and message', () => {
+            const error = new Error('error message xy');
+            error.name = 'TestError';
+            fail.with(error);
+            expect(fail.getErrorType()).to.be.equal('TestError');
+            expect(fail.getErrorMessage()).to.be.equal('error message xy');
+        });
+    });
+
+
 });

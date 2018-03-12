@@ -117,6 +117,29 @@ export class StepFunctionsGenerator extends AbstractGenerator {
         }
     }
 
+    generateWait(state: states.Wait) {
+        let data = {
+            Type: 'Wait',
+            Seconds: state.getSeconds()
+        };
+
+        data = Object.assign(data, this.generateField(state.next));
+        return data;
+    }
+
+    generateSucceed(state: states.Succeed) {
+        return { Type: 'Succeed' };
+    }
+
+    generateFail(state: states.Fail) {
+        let data = {
+            Type: 'Fail',
+            Error: state.getErrorType(),
+            Cause: state.getErrorMessage()
+        };
+        return data;
+    }
+
     generateParallel(state: states.Parallel): Object {
         const data = {
             Type: 'Parallel'

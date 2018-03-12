@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
 import { StateMachine } from '../src/StateMachine';
-import { State, Pass, Task, Parallel, Choice, CHOICE_COMPARATOR_RULE, CHOICE_LOGIC_RULE } from '../src/states';
+import { State, Pass, Task, Parallel, Fail, Succeed, Wait, Choice, CHOICE_COMPARATOR_RULE, CHOICE_LOGIC_RULE } from '../src/states';
 
 describe('AWSStepFunctions', () => {
     describe('generateField', () => {
@@ -267,6 +267,37 @@ describe('AWSStepFunctions', () => {
                     }
                 ],
                 Default: 'bar'
+            });
+        });
+
+        it('should generate wait state', () => {
+            const wait = new Wait('test');
+            wait.for(10).next.end();
+
+            const data = generator.generateState(wait);
+            expect(data).to.deep.equal({
+                Type: 'Wait',
+                Seconds: 10,
+                End: true,
+            });
+        });
+
+        it('should generate succeed state', () => {
+            const state = new Succeed('test');
+            const data = generator.generateState(state);
+            expect(data).to.deep.equal({ Type: 'Succeed' });
+        });
+
+        it('should generate fail state', () => {
+            const state = new Fail('test');
+            state.with(new Error('test'));
+
+            const data = generator.generateState(state);
+
+            expect(data).to.deep.equal({
+                Type: 'Fail',
+                Error: 'Error',
+                Cause: 'test'
             });
         });
     });
