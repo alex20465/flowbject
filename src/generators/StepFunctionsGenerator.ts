@@ -23,7 +23,7 @@ const ComparatorRuleMap = {
     [states.CHOICE_COMPARATOR_RULE.TIMESTAMP_GREATER_THAN_EQUALS]: 'TimestampGreaterThanEquals',
 };
 
-const LogicRuleMap = {
+const LogicRuleMap: { [k: string]: string } = {
     [states.CHOICE_LOGIC_RULE.AND]: 'And',
     [states.CHOICE_LOGIC_RULE.OR]: 'Or',
     [states.CHOICE_LOGIC_RULE.NOT]: 'Not',
@@ -31,8 +31,8 @@ const LogicRuleMap = {
 
 export class StepFunctionsGenerator extends AbstractGenerator {
     generateStateMachine(stateMachine: StateMachine) {
-        const data = {
-            StartAt: stateMachine.getStartState().getName(),
+        let data: any = {
+            StartAt: (<states.State>stateMachine.getStartState()).getName(),
             States: {}
         };
         if (stateMachine.getComment()) {
@@ -44,14 +44,16 @@ export class StepFunctionsGenerator extends AbstractGenerator {
         if (stateMachine.getVersion()) {
             data['Version'] = stateMachine.getVersion();
         }
-        data.States = stateMachine.getStates().reduce((states, state) => {
+        data.States = stateMachine.getStates().reduce((states: any, state) => {
             states[state.getName()] = this.generateState(state);
             return states;
         }, {});
         return data;
     }
     generateNextField(field: fields.NextField<any>): Object {
-        if (field.isEnd()) {
+        if(field.isLocked()) {
+            return {};
+        } else if (field.isEnd()) {
             return { End: true };
         } else {
             return { Next: field.nextStateName() };
@@ -141,13 +143,13 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateParallel(state: states.Parallel): Object {
-        const data = {
+        let data: any = {
             Type: 'Parallel'
         };
         data['Branches'] = state.getBranches().map((branch) => {
             return {
                 StartAt: branch.getStartAt().getName(),
-                States: branch.getStates().reduce((data, state: states.State) => {
+                States: branch.getStates().reduce((data: any, state: states.State) => {
                     data[state.getName()] = this.generateState(state);
                     return data;
                 }, {})
@@ -157,7 +159,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     private generateChoiceOperation(operation: states.ChoiceOperation) {
-        let data = {};
+        let data: any = {};
         if (operation instanceof states.ChoiceLogicOperation) {
             const rule = operation.getRule();
             let ruleKeyword = LogicRuleMap[operation.getRule()];
@@ -182,7 +184,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateChoice(state: states.Choice) {
-        const data = {
+        let data: any = {
             Type: 'Choice'
         };
 
@@ -190,7 +192,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             return this.generateChoiceOperation(operator);
         });
 
-        const defaultState = state.getDefault();
+        let defaultState = state.getDefault();
         if (defaultState !== null) {
             data['Default'] = defaultState.getName();
         }
@@ -204,7 +206,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateTask(task: states.Task): Object {
-        let data = {
+        let data: any = {
             Type: 'Task',
             Resource: task.getResource()
         };

@@ -15,8 +15,9 @@ export abstract class AbstractGenerator {
 
     protected getMethodTarget(target: states.State | fields.Field<any>): Function {
         const methodTarget = `generate${target.constructor.name}`;
-        if (this[methodTarget] instanceof Function) {
-            return this[methodTarget];
+        const self: any = this; // dynamic declaration
+        if (self[methodTarget] instanceof Function) {
+            return self[methodTarget];
         } else {
             throw new Error(`${this.constructor.name} has no generate method ${methodTarget}`);
         }

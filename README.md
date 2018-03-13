@@ -1,72 +1,67 @@
-# NodeJS State Language DSL
+# Flowbject
 
-``UNDER DEVELOPMENT``
+Flowbject allows you to build, validate and test your state-machine JSON in a more convenient way by interacting with Objects. This has many use-cases such as local state-flow validation, custom middlewares such as task identity resolvers, Tasks input/output mocking for flow-testing.
 
-NodeJS DSL builder based on State Machine language of [Amazon-State-Language](https://states-language.net/spec.html).
+The concept is based on [Amazon-State-Language](https://states-language.net/spec.html).
 
-## Motivation
 
-This package allows you to build, validate and test your state-machine JSON in a more convenient way by interacting with Objects. The project is written in OOP style and allows you to interact and build you state-machine at runtime. This has many use-cases such as local flow validation, custom middlewares such as task identity resolvers, Tasks input/output mocking for flow-testing.
+## Installation
 
-The final goal is to provide an state-machine-editor in which the user will be able to build his own custom state-machine without state-language familiarity.
-
-## Usage Examples
-
-### States
-
-#### Task
-
-Get or create an item using the catcher task branch:
-
-```typescript
-import {Task} from '../src/states';
-
-const getItem = new Task('getItem').setResource('arn..');
-const createItem = new Task('createItem').setResource('arn..');
-
-getItem
-    .catch.errors(['NotFoundError']).next.to(createItem);
+```bash
+npm install flowbject
 ```
 
-Setup retry:
+## Usage
+
+### Simple task build
 
 ```typescript
-import {Task} from '../src/states';
+import * as fobject from 'flowbject';
 
-const getItem = new Task('getItem').setResource('arn..');
 
-const getItemRetrier = getItem.retry.all(); // returns a Retrier instance associated to getItem task
+const stateMachine = new fobject.StateMachine();
 
-getItemRetrier.setInterval(2); // set custom interval
+const readImage = new fobject.Task('readImageFromS3')
+    .setResource('arn::...');
 
-```
+const convertToThumbnail = new fobject.Task('convertToThumbnail')
+    .setResource('arn::...');
 
-### Generator
-
-In order to create the step-functions JSON it is necessary to instantiate a `Generator` and a `StateMachine`:
-
-```typescript
-import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
-import { StateMachine } from '../src/StateMachine';
-
-const generator = new StepFunctionsGenerator();
-
-const stateMachine = new StateMachine();
+const saveImage = new fobject.Task('saveToS3')
+    .setResource('arn::...');
 
 stateMachine
-    .addState(getItem)
-    .addState(createItem);
+    .addState(readImage)
+    .addState(convertToThumbnail)
+    .addState(saveImage)
+    .autoNextSetup(); // setup the tasks next-field automatically
 
-const stepFunctionsJSON = generator.generateStateMachine(stateMachine);
+const generator = new fobject.StepFunctionsGenerator();
 
+const data = generator.generateStateMachine(stateMachine);
 ```
 
-## TODO
+Output:
 
-third party features using this package.
-
-- Flow validation
-- Middleware to mock tasks input/ouput
-- Middleware Lambda Task reference resolver
-- Build State-machine from JSON (reversed dump)
-- State-machine visualization
+```json
+{
+    "StartAt": "readImageFromS3",
+    "States": {
+        "readImageFromS3": {
+            "Type": "Task",
+            "Resource": "arn::...",
+            "Next": "convertToThumbnail"
+        },
+        "convertToThumbnail": {
+            "Type": "Task",
+            "Resource": "arn::...",
+            "Next": "saveToS3"
+        },
+        "saveToS3": {
+            "Type": "Task",
+            "Resource": "arn::...",
+            "End": true
+        }
+    }
+}
+```

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { StepFunctionsGenerator } from '../src/generators/StepFunctionsGenerator';
+import { StepFunctionsGenerator } from '../src/generators';
 import { StateMachine } from '../src/StateMachine';
 import { State, Pass, Task, Parallel, Fail, Succeed, Wait, Choice, CHOICE_COMPARATOR_RULE, CHOICE_LOGIC_RULE } from '../src/states';
 
@@ -167,9 +167,9 @@ describe('AWSStepFunctions', () => {
 
             const state = (new Choice('isFoo'));
 
-            state.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
-                .variable('$.type')
-                .equals('foo')
+            state.createComparatorRule(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .setVariable('$.type')
+                .setValue('foo')
                 .next.to(handleFoo);
 
             state.defaultTo(handleBar);
@@ -193,16 +193,16 @@ describe('AWSStepFunctions', () => {
             const handleBar = (new Task('bar')).setResource('xy').next.end();
 
             const state = (new Choice('isFoo'));
-            const andOperation = state.logic(CHOICE_LOGIC_RULE.AND);
+            const andOperation = state.createLogicRule(CHOICE_LOGIC_RULE.AND);
 
 
-            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
-                .variable('$.type')
-                .equals('foo')
+            andOperation.createComparatorRule(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .setVariable('$.type')
+                .setValue('foo')
 
-            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
-                .variable('$.secondType')
-                .equals('foo')
+            andOperation.createComparatorRule(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .setVariable('$.secondType')
+                .setValue('foo')
 
             andOperation.next.to(handleFoo);
             state.defaultTo(handleBar);
@@ -234,14 +234,17 @@ describe('AWSStepFunctions', () => {
             const handleBar = (new Task('bar')).setResource('xy').next.end();
 
             const state = (new Choice('isFoo'));
-            const andOperation = state.logic(CHOICE_LOGIC_RULE.AND);
+            const andOperation = state.createLogicRule(CHOICE_LOGIC_RULE.AND);
 
 
-            andOperation.compare(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
-                .variable('$.type').equals('foo')
+            andOperation.createComparatorRule(CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                .setVariable('$.type')
+                .setValue('foo')
 
-            andOperation.logic(CHOICE_LOGIC_RULE.NOT)
-                .compare(CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS).variable('$.test').equals(false);
+            andOperation.createLogicRule(CHOICE_LOGIC_RULE.NOT)
+                .createComparatorRule(CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariable('$.test')
+                .setValue(false);
 
             andOperation.next.to(handleFoo);
             state.defaultTo(handleBar);

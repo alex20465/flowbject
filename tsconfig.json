@@ -5,10 +5,16 @@
     ],
     "alwaysStrict": true,
     "strictNullChecks": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "target": "es5",
+    "outDir": "dist"
   },
-  "files": [
-    "src/**/*.ts",
-    "test/**/*ts"
+  "include": [
+    "./src/**/*.ts"
+  ], 
+  "exclude": [
+    "./node_modules/**/*"
   ]
 }

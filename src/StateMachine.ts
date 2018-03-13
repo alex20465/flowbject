@@ -1,16 +1,17 @@
 import { State } from "./states";
+import { NextField } from "./fields";
 
-interface StateMachineOptions {
+export interface StateMachineOptions {
     comment?: string
     timeout?: number // seconds
     version?: string
 }
 
 export class StateMachine {
-    private comment: string;
-    private timeout: number;
-    private version: string;
-    private startState: State;
+    private comment: string | null;
+    private timeout: number | null;
+    private version: string | null;
+    private startState: State | null;
     private states: State[];
     private _state_index: { [k: string]: number }
 
@@ -46,15 +47,37 @@ export class StateMachine {
         return this;
     }
 
+    autoNextSetup() {
+        let previousState: any;
+        this.states.forEach((state) => {
+            if (previousState) {
+                const next = <NextField<any>>(<any>previousState).next;
+                if (next && !next.isConfigured()) {
+                    next.to(state);
+                }
+            }
+            previousState = state;
+        });
+
+        if (previousState) {
+            const next = <NextField<any>>(previousState).next;
+            if (next && !next.isConfigured()) {
+                next.end();
+            }
+        }
+
+    }
+
     validate(): Error[] {
-        const stateErrors = this.states.reduce((errors, state) => {
+        let errors: Error[] = [];
+        errors = this.states.reduce((errors, state) => {
             return errors.concat(state.validate());
-        }, []);
+        }, errors);
         const machineErrors = [];
         if (this.states.length === 0) {
             machineErrors.push(new Error('State requires at least 1 state item'));
         }
-        return stateErrors.concat(machineErrors);
+        return errors.concat(machineErrors);
     }
 
     getComment() { return this.comment }

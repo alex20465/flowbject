@@ -157,8 +157,9 @@ describe('Fields', () => {
         it('should validate with error: "requires configuration setup"', () => {
             const mockReportState = new Task('report');
             state.catch.errors(['test']); // requires next setup
-            const { message } = state.catch.validate();
-            expect(message).to.contain('requires configuration setup');
+            const error = state.catch.validate();
+            expect(error).not.to.be.null;
+            expect((<Error>error).message).to.contain('requires configuration setup');
         });
 
         it('should validate without error but with next setup', () => {

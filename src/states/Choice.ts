@@ -4,6 +4,7 @@ import { ChoiceOperationOptions } from './Choice';
 
 export interface ChoiceOperationOptions {
     allowNext?: boolean;
+    lockNext?: boolean;
 }
 
 export type OperandValueType = string | number | boolean;
@@ -61,15 +62,11 @@ const ComparatorSupportedType: { [k: string]: CHOICE_COMPARATOR_RULE[] } = {
 export abstract class ChoiceOperation {
     protected rule: CHOICE_COMPARATOR_RULE | CHOICE_LOGIC_RULE;
     protected parentState: Choice;
-    public next: NextField<Choice> | null;
+    public next: NextField<Choice>;
 
     constructor(state: Choice, rule: CHOICE_COMPARATOR_RULE | CHOICE_LOGIC_RULE, options: ChoiceOperationOptions = {}) {
         this.rule = rule;
-        if (options.allowNext === false) {
-            this.next = null;
-        } else {
-            this.next = new NextField(state);
-        }
+        this.next = new NextField(state, { locked: options.lockNext });
         this.parentState = state;
     }
 
@@ -88,14 +85,14 @@ export class ChoiceLogicOperation extends ChoiceOperation {
         this.nestedOperations = [];
     }
 
-    compare(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
-        const operation = new ChoiceComparatorOperation(this.parentState, rule, { allowNext: false });
+    createComparatorRule(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
+        const operation = new ChoiceComparatorOperation(this.parentState, rule, { allowNext: false, lockNext: true });
         this.nestedOperations.push(operation);
         return operation;
     }
 
-    logic(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
-        const operation = new ChoiceLogicOperation(this.parentState, rule, { allowNext: false });
+    createLogicRule(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
+        const operation = new ChoiceLogicOperation(this.parentState, rule, { allowNext: false, lockNext: true });
         const currentRule = this.getRule();
 
         this.nestedOperations.push(operation);
@@ -131,14 +128,14 @@ export class ChoiceComparatorOperation extends ChoiceOperation {
     private valueOperand: OperandValueType;
     private variableOperand: string;
 
-    equals(value: OperandValueType) {
+    setValue(value: OperandValueType) {
 
         assertComparatorSupportsValue(value, <CHOICE_COMPARATOR_RULE>this.rule);
         this.valueOperand = value;
         return this;
     }
 
-    variable(variable: string) {
+    setVariable(variable: string) {
         this.variableOperand = variable;
         return this;
     }
@@ -183,13 +180,13 @@ export class Choice extends State {
         return this;
     }
 
-    compare(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
+    createComparatorRule(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
         const operation = new ChoiceComparatorOperation(this, rule);
         this.operations.push(operation);
         return operation;
     }
 
-    logic(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
+    createLogicRule(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
         const operation = new ChoiceLogicOperation(this, rule);
         this.operations.push(operation);
         return operation;

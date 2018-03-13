@@ -145,43 +145,42 @@ describe('States', () => {
 
         it('should add root boolean-equals operation', () => {
             state
-                .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                .variable('$.test')
-                .equals(true);
+                .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariable('$.test')
+                .setValue(true);
         });
 
         it('should add root AND logical operation', () => {
             const rootOperation = state
-                .logic(states.CHOICE_LOGIC_RULE.AND);
+                .createLogicRule(states.CHOICE_LOGIC_RULE.AND);
             const nestedOperation = rootOperation
-                .compare(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS);
+                .createComparatorRule(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS);
 
-            expect(rootOperation.next).to.not.be.null;
-            expect(nestedOperation.next).to.be.null; // nested operations have not next field
+            expect(nestedOperation.next.isLocked()).to.be.true;
         });
 
         it('should add multiple nested operations', () => {
             const rootOperation = state
-                .logic(states.CHOICE_LOGIC_RULE.AND)
+                .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
             rootOperation.next.end();
 
             const operationDepth1 = rootOperation
-                .logic(states.CHOICE_LOGIC_RULE.OR);
+                .createLogicRule(states.CHOICE_LOGIC_RULE.OR);
 
             const operationDepth2 = operationDepth1
-                .compare(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
-                .variable('$.test')
-                .equals(22);
+                .createComparatorRule(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
+                .setVariable('$.test')
+                .setValue(22);
 
             const operationDepth2_2 = operationDepth1
-                .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                .variable('$.test2')
-                .equals(false);
+                .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariable('$.test2')
+                .setValue(false);
 
             rootOperation
-                .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                .variable('$.isAccepted')
-                .equals(true);
+                .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                .setVariable('$.isAccepted')
+                .setValue(true);
 
             const errors = state.validate();
             expect(errors).lengthOf(0);
@@ -194,41 +193,41 @@ describe('States', () => {
             })
             it('should validate with errors with no operations are added', () => {
                 const rootOperation = state
-                    .logic(states.CHOICE_LOGIC_RULE.AND);
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.AND);
                 const [error] = rootOperation.validate();
                 expect(error.message).to.contain('require at least TWO nested operations');
             });
             it('should validate without errors with correct configrations', () => {
                 const rootOperation = state
-                    .logic(states.CHOICE_LOGIC_RULE.AND)
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
                 rootOperation.next.end();
 
                 rootOperation
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .variable('$.isAvailable')
-                    .equals(true);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.isAvailable')
+                    .setValue(true);
 
                 rootOperation
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .variable('$.isAccepted')
-                    .equals(true);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.isAccepted')
+                    .setValue(true);
                 const errors = state.validate();
                 expect(errors).lengthOf(0);
             });
 
             it('should detect errors of nested operations (depth 1)', () => {
                 const rootOperation = state
-                    .logic(states.CHOICE_LOGIC_RULE.AND)
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
                 rootOperation.next.end();
 
                 rootOperation
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .equals(true);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setValue(true);
 
                 rootOperation
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .variable('$.isAccepted')
-                    .equals(true);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.isAccepted')
+                    .setValue(true);
                 const errors = state.validate();
                 expect(errors).lengthOf(1);
                 expect(errors[0].message).to.contain('Variable operand of comparator is required');
@@ -236,36 +235,36 @@ describe('States', () => {
 
             it('should throw error when trying to add invalid value type to comparator rule BOOLEAN_EQUALS', () => {
                 const rootOperation = state
-                    .logic(states.CHOICE_LOGIC_RULE.AND)
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
                 rootOperation.next.end();
 
                 expect(() => {
                     rootOperation
-                        .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                        .equals("invalid");
+                        .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                        .setValue("invalid");
                 }).throws(Error, 'does not support value type');
             });
 
             it('should detect errors of nested operations (depth 2)', () => {
                 const rootOperation = state
-                    .logic(states.CHOICE_LOGIC_RULE.AND)
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
                 rootOperation.next.end();
 
                 const operationDepth1 = rootOperation
-                    .logic(states.CHOICE_LOGIC_RULE.OR);
+                    .createLogicRule(states.CHOICE_LOGIC_RULE.OR);
 
                 const operationDepth2 = operationDepth1
-                    .compare(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
-                    .variable('$.test')
-                    .equals(22);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.NUMERIC_EQUALS)
+                    .setVariable('$.test')
+                    .setValue(22);
                 const operationDepth2_2 = operationDepth1
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .variable('$.test2')
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.test2')
 
                 rootOperation
-                    .compare(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
-                    .variable('$.isAccepted')
-                    .equals(true);
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.isAccepted')
+                    .setValue(true);
 
                 const errors = state.validate();
 
