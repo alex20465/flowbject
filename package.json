@@ -1,6 +1,6 @@
 {
   "name": "flowbject",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Flowbject is a library that allows you to describe state machines with objects.",
   "main": "./dist/index.js",
   "scripts": {
@@ -8,6 +8,10 @@
     "build": "tsc",
     "ts": "ts-node src/",
     "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alex20465/flowbject"
   },
   "author": "Alexandros Fotiadis <fotiadis90@gmail.com>",
   "license": "ISC",
