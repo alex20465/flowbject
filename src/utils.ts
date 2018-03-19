@@ -1,5 +1,5 @@
 
-const JPATH_VALIDATOR_EXPRESSION = /^\$\./;
+const JPATH_VALIDATOR_EXPRESSION = /^\$/;
 /**
  * @todo: Test this and allow more valid json-paths
  */
