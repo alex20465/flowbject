@@ -6,6 +6,7 @@ export class ResultPathField<T extends State> extends Field<T> {
     required: false;
     private path: string | null = null;
 
+    private _discard: boolean = false;
 
     validate() {
         if (this.path !== null) {
@@ -13,6 +14,12 @@ export class ResultPathField<T extends State> extends Field<T> {
         } else {
             return null;
         }
+    }
+
+    discard() {
+        this._discard = true;
+        this.receiveConfiguration();
+        return this.getParentState();
     }
 
     set(path: string): T {
@@ -26,6 +33,10 @@ export class ResultPathField<T extends State> extends Field<T> {
     }
 
     get() {
-        return this.path;
+        if (this._discard) {
+            return null;
+        } else {
+            return this.path;
+        }
     }
 }

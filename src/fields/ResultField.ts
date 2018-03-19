@@ -19,6 +19,11 @@ export class ResultField<T extends State> extends Field<T> {
         return this.getParentState();
     }
 
+    setAll(value: ResultType): T {
+        this.result = value;
+        return this.getParentState();
+    }
+
     get(name: string): SupportedValueType {
         return this.result[name];
     }
