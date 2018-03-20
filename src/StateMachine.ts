@@ -26,7 +26,6 @@ export class StateMachine {
         this._state_index = {};
     }
     startAt(state: State): this {
-        // @todo: State should exists in the states
         this.startState = state;
         return this;
     }

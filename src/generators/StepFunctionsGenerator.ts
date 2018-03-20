@@ -30,6 +30,7 @@ const LogicRuleMap: { [k: string]: string } = {
 }
 
 export class StepFunctionsGenerator extends AbstractGenerator {
+
     generateStateMachine(stateMachine: StateMachine) {
         let data: any = {
             StartAt: (<states.State>stateMachine.getStartState()).getName(),
@@ -45,11 +46,12 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             data['Version'] = stateMachine.getVersion();
         }
         data.States = stateMachine.getStates().reduce((states: any, state) => {
-            states[state.getName()] = this.generateState(state);
+            states[state.getName()] = this.generate(state);
             return states;
         }, {});
         return data;
     }
+
     generateNextField(field: fields.NextField<any>): Object {
         if (field.isLocked()) {
             return {};
@@ -59,6 +61,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             return { Next: field.nextStateName() };
         }
     }
+
     generatePathField(field: fields.PathField<any>): Object {
         let data: any = {};
 
@@ -110,9 +113,9 @@ export class StepFunctionsGenerator extends AbstractGenerator {
                 let cacherData = {
                     ErrorEquals: cacher.getErrors()
                 };
-                Object.assign(cacherData, this.generateNextField(cacher.next));
+                Object.assign(cacherData, this.generate(cacher.next));
                 if (cacher.resultPath.isConfigured()) {
-                    Object.assign(cacherData, this.generateResultPathField(cacher.resultPath));
+                    Object.assign(cacherData, this.generate(cacher.resultPath));
                 }
                 return cacherData;
             })
@@ -125,7 +128,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             Seconds: state.getSeconds()
         };
 
-        data = Object.assign(data, this.generateField(state.next));
+        data = Object.assign(data, this.generate(state.next));
         return data;
     }
 
@@ -150,7 +153,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
             return {
                 StartAt: branch.getStartAt().getName(),
                 States: branch.getStates().reduce((data: any, state: states.State) => {
-                    data[state.getName()] = this.generateState(state);
+                    data[state.getName()] = this.generate(state);
                     return data;
                 }, {})
             };
@@ -177,7 +180,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
         }
 
         if (operation.next) {
-            data = Object.assign(data, this.generateNextField(operation.next));
+            data = Object.assign(data, this.generate(operation.next));
         }
 
         return data;

@@ -1,19 +1,9 @@
-import { State } from "./states/State";
+import { StateMachine } from "./StateMachine";
 import { NextField } from './fields/NextField';
 
-const JPATH_VALIDATOR_EXPRESSION = /^\$/;
-
-export function validateJSONPath(path: string): null | Error {
-    if (JPATH_VALIDATOR_EXPRESSION.test(path)) {
-        return null;
-    } else {
-        return new Error(`Invalid json-path expression "${path}"`);
-    }
-}
-
-export function linkStates(states: State[]) {
+export function statesAutolink(stateMachine: StateMachine) {
     let previousState: any;
-    states.forEach((state) => {
+    stateMachine.getStates().forEach((state) => {
         if (previousState) {
             const next = <NextField<any>>(<any>previousState).next;
             if (next && !next.isConfigured()) {

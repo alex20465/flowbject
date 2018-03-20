@@ -4,13 +4,13 @@ import { NextField } from './NextField';
 import { ResultPathField } from './ResultPathField';
 
 export enum ERROR_CODES {
-    TIMEOUT = 'States.Timeout',
-    ALL = 'States.ALL',
-    TASK_FAILED = 'States.TaskFailed',
-    PERMISSIONS = 'States.Permissions',
-    RESULT_PATH_MATCH_FAILURE = 'States.ResultPathMatchFailure',
-    BRANCH_FAILED = 'States.BranchFailed',
-    NO_CHOICE_MATCHED = 'States.NoChoiceMatched',
+    TIMEOUT,
+    ALL,
+    TASK_FAILED,
+    PERMISSIONS,
+    RESULT_PATH_MATCH_FAILURE,
+    BRANCH_FAILED,
+    NO_CHOICE_MATCHED,
 }
 
 export class Retrier<T extends State> {
@@ -18,7 +18,7 @@ export class Retrier<T extends State> {
     private interval: number | null;
     private backoffRate: number | null;
     private maxAttempts: number | null;
-    private errorTypes: string[];
+    private errorTypes: ERROR_CODES[];
 
     constructor(state: T) {
         this.parent = state;
@@ -27,7 +27,7 @@ export class Retrier<T extends State> {
         this.maxAttempts = null;
     }
 
-    setErrorTypes(errorTypes: string[] | ERROR_CODES[]) {
+    setErrorTypes(errorTypes: ERROR_CODES[]) {
         this.errorTypes = errorTypes;
     }
     getErrorTypes() {
@@ -66,7 +66,7 @@ export class RetryField<T extends State> extends Field<T> {
 
     getRetries() { return this.retriers.slice(0) }
 
-    private addInternalRetrier(errorCode: ERROR_CODES): Retrier<T> {
+    createRetrier(errorCode: ERROR_CODES): Retrier<T> {
         const retrier = new Retrier<T>(this.getParentState());
         retrier.setErrorTypes([errorCode]);
         this.retriers.push(retrier);
@@ -81,7 +81,7 @@ export class RetryField<T extends State> extends Field<T> {
      * the “HeartbeatSeconds” value.
      */
     timeout(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.TIMEOUT);
+        return this.createRetrier(ERROR_CODES.TIMEOUT);
     }
 
     /**
@@ -89,7 +89,7 @@ export class RetryField<T extends State> extends Field<T> {
      * A wild-card which matches any Error Name.
      */
     all(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.ALL);
+        return this.createRetrier(ERROR_CODES.ALL);
     }
 
     /**
@@ -97,7 +97,7 @@ export class RetryField<T extends State> extends Field<T> {
      * A Task State failed during the execution.
      */
     taskFailure(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.TASK_FAILED);
+        return this.createRetrier(ERROR_CODES.TASK_FAILED);
     }
 
     /**
@@ -106,7 +106,7 @@ export class RetryField<T extends State> extends Field<T> {
      * the specified code.
      */
     permissions(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.PERMISSIONS);
+        return this.createRetrier(ERROR_CODES.PERMISSIONS);
     }
 
     /**
@@ -115,7 +115,7 @@ export class RetryField<T extends State> extends Field<T> {
      * input the state received.
      */
     resultPathMatchFailure(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.RESULT_PATH_MATCH_FAILURE);
+        return this.createRetrier(ERROR_CODES.RESULT_PATH_MATCH_FAILURE);
     }
 
     /**
@@ -123,7 +123,7 @@ export class RetryField<T extends State> extends Field<T> {
      * A branch of a Parallel state failed.
      */
     branchFailure(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.BRANCH_FAILED);
+        return this.createRetrier(ERROR_CODES.BRANCH_FAILED);
     }
 
     /**
@@ -132,6 +132,6 @@ export class RetryField<T extends State> extends Field<T> {
      * field extracted from its input.
      */
     noChoiceMatch(): Retrier<T> {
-        return this.addInternalRetrier(ERROR_CODES.NO_CHOICE_MATCHED);
+        return this.createRetrier(ERROR_CODES.NO_CHOICE_MATCHED);
     }
 }
