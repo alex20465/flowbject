@@ -8,12 +8,13 @@ export class ResultField<T extends State> extends Field<T> {
     private result: any;
     constructor(state: T) {
         super(state);
-        this.result = {};
+        this.result = null;
     }
 
     set(value: SupportedValueType): T {
         this.receiveConfiguration();
         this.result = value;
+        this.receiveConfiguration();
         return this.getParentState();
     }
 
