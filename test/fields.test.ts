@@ -17,28 +17,18 @@ describe('Fields', () => {
         });
 
         it('should provide empty result object by default', () => {
-            expect(resultField.getAll()).to.deep.equal({});
+            expect(resultField.get()).to.deep.equal(null);
         });
 
         it('should set single result value', () => {
-            resultField.set('test', 0);
-            expect(resultField.getAll()).to.deep.equal({ test: 0 });
+            resultField.set({ 'test': 0 });
+            expect(resultField.get()).to.deep.equal({ test: 0 });
         });
 
         it('should change the configuration state to TRUE after calling SET()', () => {
             expect(resultField.isConfigured()).to.be.false;
-            expect(resultField.set('test', 0).result.isConfigured()).to.be.true;
+            expect(resultField.set({ 'test': 0 }).result.isConfigured()).to.be.true;
         })
-
-        it('should set results using setResult chain', () => {
-            resultField.set('test', 0).result.set('test2', 1);
-            expect(resultField.getAll()).to.deep.equal({ test: 0, test2: 1 });
-        })
-
-        it('should get result test=0', () => {
-            resultField.set('test', 0);
-            expect(resultField.get('test')).to.be.equal(0);
-        });
     });
 
     describe('NextField', () => {

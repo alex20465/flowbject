@@ -3,33 +3,22 @@ import { State } from "../states/State";
 
 export declare type SupportedValueType = object | string | boolean | number | null;
 
-export declare type ResultType = { [k: string]: SupportedValueType };
 
 export class ResultField<T extends State> extends Field<T> {
     required = false;
-    private result: ResultType;
+    private result: SupportedValueType;
     constructor(state: T) {
         super(state);
-        this.result = {};
+        this.result = null;
     }
 
-    set(name: string, value: SupportedValueType): T {
-        this.receiveConfiguration();
-        this.result[name] = value;
-        return this.getParentState();
-    }
-
-    setAll(value: ResultType): T {
+    set(value: SupportedValueType): T {
         this.result = value;
+        this.receiveConfiguration();
         return this.getParentState();
     }
 
-    get(name: string): SupportedValueType {
-        return this.result[name];
+    get(): SupportedValueType {
+        return this.result;
     }
-
-    getAll(): ResultType {
-        return JSON.parse(JSON.stringify(this.result));
-    }
-
 }
