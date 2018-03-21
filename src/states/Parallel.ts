@@ -40,12 +40,14 @@ export class Parallel extends State {
     public next: NextField<Parallel>;
     private branches: ParallelBranch[];
     public path: PathField<Parallel>;
+    public resultPath: ResultPathField<Parallel>;
 
     constructor(name: string) {
         super(name);
         this.branches = [];
         this.next = new NextField<Parallel>(this);
         this.path = new PathField<Parallel>(this);
+        this.resultPath = new ResultPathField<Parallel>(this);
     }
 
     addBranch(branch?: ParallelBranch) {
