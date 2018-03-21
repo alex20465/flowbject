@@ -66,6 +66,7 @@ describe('AWSStepFunctions', () => {
 
         it('should generate state parallel', () => {
             const generateImage = new Parallel('generateImage');
+            generateImage.path.setInput('$.test').path.setOutput('$.testOutput');
 
             const generateThumbnail = new Task('generateThumbail').setResource('arn::xy').next.end();
             const generatePortrait = new Task('generatePortrait').setResource('arn::xy').next.end();
@@ -77,6 +78,8 @@ describe('AWSStepFunctions', () => {
 
             expect(data).to.deep.equal({
                 Type: "Parallel",
+                InputPath: "$.test",
+                OutputPath: "$.testOutput",
                 Branches: [
                     {
                         StartAt: "generateThumbail",
