@@ -3,12 +3,14 @@ import * as states from '../src/states';
 import * as fields from '../src/fields';
 import * as hydrators from '../src/hydrators/aws';
 import { ERROR_CODES } from '../src/fields/RetryField';
+import { AWSStepFunctionsHydratorManager } from '../src/hydrators';
 
 describe.only('AWS', () => {
     let state: states.State;
-
+    let manager: AWSStepFunctionsHydratorManager;
     beforeEach(() => {
         state = new states.Pass('foo');
+        manager = new AWSStepFunctionsHydratorManager();
     })
 
     describe('NextField', () => {
@@ -18,7 +20,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.NextField<any>(state);
-            hydrator = new hydrators.NextFieldHydrator();
+            hydrator = new hydrators.NextFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -55,7 +57,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.PathField<any>(state);
-            hydrator = new hydrators.PathFieldHydrator();
+            hydrator = new hydrators.PathFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -92,7 +94,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.ResultField<any>(state);
-            hydrator = new hydrators.ResultFieldHydrator();
+            hydrator = new hydrators.ResultFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -119,7 +121,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.RetryField<any>(state);
-            hydrator = new hydrators.RetryFieldHydrator();
+            hydrator = new hydrators.RetryFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -180,7 +182,6 @@ describe.only('AWS', () => {
         })
     });
 
-
     describe('CatchField', () => {
 
         let field: fields.CatchField<any>;
@@ -188,7 +189,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.CatchField<any>(state);
-            hydrator = new hydrators.CatchFieldHydrator();
+            hydrator = new hydrators.CatchFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -241,7 +242,7 @@ describe.only('AWS', () => {
 
         beforeEach(() => {
             field = new fields.ResultPathField<any>(state);
-            hydrator = new hydrators.ResultPathFieldHydrator();
+            hydrator = new hydrators.ResultPathFieldHydrator(manager);
         });
 
         describe('extract', () => {
@@ -279,4 +280,199 @@ describe.only('AWS', () => {
         });
     });
 
+    describe('WaitState', () => {
+
+        let state: states.Wait;
+        let hydrator: hydrators.WaitStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Wait('foo');
+            hydrator = new hydrators.WaitStateHydrator(manager);
+        });
+
+        describe('extract seconds', () => {
+            it('should extract', () => {
+                state.setSeconds(6);
+                expect(hydrator.extract(state)).to.deep.equal({
+                    Seconds: 6
+                });
+            });
+        });
+
+        describe('hydrate seconds', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {
+                    Seconds: 7
+                });
+                expect(state.getSeconds()).to.be.equal(7);
+            });
+        });
+    });
+
+    describe('TaskState', () => {
+
+        let state: states.Task;
+        let hydrator: hydrators.TaskStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Task('foo');
+            hydrator = new hydrators.TaskStateHydrator(manager);
+        });
+
+        describe('extract', () => {
+            it('should extract', () => {
+                state.setResource('xy')
+                    .setTimeout(7)
+                    .setHeartbeat(1);
+                expect(hydrator.extract(state)).to.deep.equal({
+                    Resource: 'xy',
+                    TimeoutSeconds: 7,
+                    HeartbeatSeconds: 1
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {
+                    Resource: 'xy',
+                    TimeoutSeconds: 7,
+                    HeartbeatSeconds: 1
+                });
+                expect(state.getResource()).to.be.equal('xy');
+                expect(state.getTimeout()).to.be.equal(7);
+                expect(state.getHeartbeat()).to.be.equal(1);
+            });
+        });
+    });
+
+    describe('SucceedState', () => {
+
+        let state: states.Succeed;
+        let hydrator: hydrators.SucceedStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Succeed('foo');
+            hydrator = new hydrators.SucceedStateHydrator(manager);
+        });
+
+        describe('extract', () => {
+            it('should extract', () => {
+                expect(hydrator.extract(state)).to.deep.equal({});
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {});
+                expect(null).to.be.null;
+            });
+        });
+    });
+
+    describe('ParallelState', () => {
+
+        let state: states.Parallel;
+        let hydrator: hydrators.ParallelStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Parallel('foo');
+            hydrator = new hydrators.ParallelStateHydrator(manager);
+        });
+
+        describe('extract', () => {
+            it('should extract', () => {
+                const subTask = new states.Task('foo').setResource('xy');
+                state.addBranch().addState(subTask);
+                expect(hydrator.extract(state)).to.deep.equal({
+                    Branches: [
+                        {
+                            StartAt: 'foo',
+                            States: {
+                                foo: {
+                                    Type: 'Task',
+                                    Resource: 'xy'
+                                }
+                            }
+                        }
+                    ]
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {
+                    Branches: [
+                        {
+                            StartAt: 'foo',
+                            States: {
+                                foo: {
+                                    Type: 'Task',
+                                    Resource: 'xy'
+                                }
+                            }
+                        }
+                    ]
+                });
+                const [branch] = state.getBranches();
+
+                expect(branch.getStartAt().getName()).to.be.equal('foo');
+                const [fooState] = branch.getStates();
+                expect((<states.Task>fooState).getResource()).to.be.equal('xy');
+            });
+        });
+    });
+
+    describe('FailState', () => {
+
+        let state: states.Fail;
+        let hydrator: hydrators.FailStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Fail('foo');
+            hydrator = new hydrators.FailStateHydrator(manager);
+        });
+
+        describe('extract', () => {
+            it('should extract', () => {
+                expect(hydrator.extract(state)).to.deep.equal({
+
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {});
+                expect(null).to.be.null;
+            });
+        });
+    });
+
+    describe('ChoiceState', () => {
+
+        let state: states.Choice;
+        let hydrator: hydrators.ChoiceStateHydrator;
+
+        beforeEach(() => {
+            state = new states.Choice('foo');
+            hydrator = new hydrators.ChoiceStateHydrator(manager);
+        });
+
+        describe('extract', () => {
+            it('should extract', () => {
+                expect(hydrator.extract(state)).to.deep.equal({
+
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate', () => {
+                hydrator.hydrate(state, {});
+                expect(null).to.be.null;
+            });
+        });
+    });
 });

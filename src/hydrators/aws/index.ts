@@ -6,3 +6,10 @@ export { ResultFieldHydrator } from './ResultFieldHydrator';
 export { RetryFieldHydrator } from './RetryFieldHydrator';
 export { CatchFieldHydrator } from './CatchFieldHydrator';
 export { ResultPathFieldHydrator } from './ResultPathFieldHydrator';
+
+export { ChoiceStateHydrator } from './ChoiceStateHydrator';
+export { FailStateHydrator } from './FailStateHydrator';
+export { ParallelStateHydrator } from './ParallelStateHydrator';
+export { SucceedStateHydrator } from './SucceedStateHydrator';
+export { TaskStateHydrator } from './TaskStateHydrator';
+export { WaitStateHydrator } from './WaitStateHydrator';

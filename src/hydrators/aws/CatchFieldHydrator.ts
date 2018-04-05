@@ -3,34 +3,28 @@ import { AbstractHydrator } from '../AbstractHydrator';
 import { CatchField } from '../../fields/CatchField';
 import { NextFieldHydrator } from './NextFieldHydrator';
 import { ResultPathFieldHydrator } from './ResultPathFieldHydrator';
+import { AbstractHydratorManager } from '../AbstractHydratorManager';
+import { AWSStepFunctionsHydratorManager } from '..';
 
 
-export class CatchFieldHydrator extends AbstractHydrator<CatchField<any>, Object> {
+export class CatchFieldHydrator extends AbstractHydrator<CatchField<any>, AWSStepFunctionsHydratorManager> {
     extract(instance: CatchField<any>) {
-        const nextHydrator = new NextFieldHydrator();
-        const resultPathHydrator = new ResultPathFieldHydrator();
         return {
-            Catch: instance.getCatchers().map((cacher) => {
+            Catch: instance.getCatchers().map((catcher) => {
                 let data = {
-                    ErrorEquals: cacher.getErrors()
+                    ErrorEquals: catcher.getErrors()
                 };
-                Object.assign(data, nextHydrator.extract(cacher.next));
-                if (cacher.resultPath.isConfigured()) {
-                    Object.assign(data, resultPathHydrator.extract(cacher.resultPath));
-                }
+                Object.assign(data, this.manager.extractRelatedFields(catcher));
                 return data;
             })
         }
     }
 
     hydrate(instance: CatchField<any>, data: any) {
-        const nextHydrator = new NextFieldHydrator();
-        const resultPathHydrator = new ResultPathFieldHydrator();
 
         data.Catch.forEach((catcherData: any) => {
             const catcher = instance.errors(catcherData.ErrorEquals);
-            nextHydrator.hydrate(catcher.next, catcherData);
-            resultPathHydrator.hydrate(catcher.resultPath, catcherData);
+            this.manager.hydrateRelatedFields(catcher, catcherData);
         });
 
         return instance;
