@@ -72,7 +72,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateResultField(field: fields.ResultField<any>): Object {
-        return { Result: field.getAll() };
+        return { Result: field.get() };
     }
 
     generateResultPathField(field: fields.ResultPathField<any>): Object {
