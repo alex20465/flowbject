@@ -1,9 +1,9 @@
 
-import { HydratorInterface } from '../HydratorInterface';
+import { AbstractHydrator } from '../AbstractHydrator';
 import { PathField } from '../../fields/PathField';
 
 
-export class PathFieldHydrator implements HydratorInterface<PathField<any>, Object> {
+export class PathFieldHydrator extends AbstractHydrator<PathField<any>, Object> {
     extract(instance: PathField<any>) {
         let data: any = {};
 

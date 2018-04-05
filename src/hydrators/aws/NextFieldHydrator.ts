@@ -1,9 +1,9 @@
 
-import { HydratorInterface } from '../HydratorInterface';
+import { AbstractHydrator } from '../AbstractHydrator';
 import { NextField } from '../..';
 
 
-export class NextFieldHydrator implements HydratorInterface<NextField<any>, Object> {
+export class NextFieldHydrator extends AbstractHydrator<NextField<any>, Object> {
     extract(instance: NextField<any>) {
         if (instance.isLocked()) {
             return {};

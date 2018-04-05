@@ -1,9 +1,9 @@
 
-import { HydratorInterface } from '../HydratorInterface';
+import { AbstractHydrator } from '../AbstractHydrator';
 import { ResultField } from '../../fields/ResultField';
 
 
-export class ResultFieldHydrator implements HydratorInterface<ResultField<any>, Object> {
+export class ResultFieldHydrator extends AbstractHydrator<ResultField<any>, Object> {
     extract(instance: ResultField<any>) {
         return { Result: instance.get() };
     }

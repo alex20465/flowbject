@@ -1,5 +1,5 @@
 
-import { HydratorInterface } from '../HydratorInterface';
+import { AbstractHydrator } from '../AbstractHydrator';
 import { RetryField, ERROR_CODES, Retrier } from '../../fields/RetryField';
 
 const ErrorCodes = {
@@ -12,7 +12,7 @@ const ErrorCodes = {
     [ERROR_CODES.NO_CHOICE_MATCHED]: 'States.NoChoiceMatched',
 };
 
-export class RetryFieldHydrator implements HydratorInterface<RetryField<any>, Object> {
+export class RetryFieldHydrator extends AbstractHydrator<RetryField<any>, Object> {
     extract(instance: RetryField<any>) {
         return {
             Retry: instance.getRetries().map((retrier) => {

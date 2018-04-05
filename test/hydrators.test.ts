@@ -179,4 +179,104 @@ describe.only('AWS', () => {
             });
         })
     });
+
+
+    describe('CatchField', () => {
+
+        let field: fields.CatchField<any>;
+        let hydrator: hydrators.CatchFieldHydrator;
+
+        beforeEach(() => {
+            field = new fields.CatchField<any>(state);
+            hydrator = new hydrators.CatchFieldHydrator();
+        });
+
+        describe('extract', () => {
+            it('should extract catcher with maxAttempts', () => {
+                const catcher = field.errors(['NotFoundError']);
+                catcher.next.end();
+                catcher.resultPath.set('$.foo')
+                expect(hydrator.extract(field)).to.deep.equal({
+                    Catch: [
+                        {
+                            ErrorEquals: ['NotFoundError'],
+                            End: true,
+                            ResultPath: '$.foo'
+                        }
+                    ]
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate all state retrier', () => {
+                hydrator.hydrate(field, {
+                    Catch: [
+                        {
+                            ErrorEquals: ['NotFoundError'],
+                            Next: "test",
+                            ResultPath: "$.bar"
+                        },
+                        {
+                            ErrorEquals: ['TimeoutError'],
+                            End: true
+                        },
+                    ]
+                });
+                const [notFoundCatcher, timeoutCatcher] = field.getCatchers();
+
+                expect(notFoundCatcher).not.to.be.undefined;
+                expect(timeoutCatcher).not.to.be.undefined;
+                expect(notFoundCatcher.next.nextStateName()).to.be.equal('test');
+                expect(notFoundCatcher.resultPath.get()).to.be.equal('$.bar');
+                expect(timeoutCatcher.next.isEnd()).to.be.true;
+            });
+        })
+    });
+
+    describe('ResultPathField', () => {
+
+        let field: fields.ResultPathField<any>;
+        let hydrator: hydrators.ResultPathFieldHydrator;
+
+        beforeEach(() => {
+            field = new fields.ResultPathField<any>(state);
+            hydrator = new hydrators.ResultPathFieldHydrator();
+        });
+
+        describe('extract', () => {
+            it('should extract resultPath NULL to discard the results', () => {
+                field.discard();
+                const data = hydrator.extract(field);
+
+                expect(data).to.deep.equal({
+                    ResultPath: null
+                });
+            });
+
+            it('should extract exact jsonpath-pattern', () => {
+                field.set('$.foo');
+                const data = hydrator.extract(field);
+                expect(data).to.deep.equal({
+                    ResultPath: '$.foo'
+                });
+            });
+        });
+
+        describe('hydrate', () => {
+            it('should hydrate all null as discard', () => {
+                hydrator.hydrate(field, {
+                    ResultPath: null
+                });
+                expect(field.get()).to.be.null;
+            });
+            it('should hydrate specific JSONPath pattern', () => {
+                hydrator.hydrate(field, {
+                    ResultPath: '$.foo'
+                });
+                expect(field.get()).to.be.equal('$.foo');
+            });
+        });
+    });
+
 });
