@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { AWSStepFunctionsHydratorManager } from '../src/hydrators';
 import { Wait, Task, NextField } from '../src';
 
-describe.only('Hydrator Manager', () => {
+describe('Hydrator Manager', () => {
     let manager: AWSStepFunctionsHydratorManager;
     let fooState: Task;
     beforeEach(() => {

@@ -5,7 +5,7 @@ import * as hydrators from '../src/hydrators/aws';
 import { ERROR_CODES } from '../src/fields/RetryField';
 import { AWSStepFunctionsHydratorManager } from '../src/hydrators';
 
-describe.only('AWS', () => {
+describe('AWS', () => {
     let state: states.State;
     let manager: AWSStepFunctionsHydratorManager;
     beforeEach(() => {
@@ -436,16 +436,22 @@ describe.only('AWS', () => {
 
         describe('extract', () => {
             it('should extract', () => {
+                state.with(new Error('foo error'))
                 expect(hydrator.extract(state)).to.deep.equal({
-
+                    Error: 'Error',
+                    Cause: 'foo error'
                 });
             });
         });
 
         describe('hydrate', () => {
             it('should hydrate', () => {
-                hydrator.hydrate(state, {});
-                expect(null).to.be.null;
+                hydrator.hydrate(state, {
+                    Error: 'Test',
+                    Cause: 'foo error'
+                });
+                expect(state.getErrorMessage()).to.be.equal('foo error');
+                expect(state.getErrorType()).to.be.equal('Test');
             });
         });
     });
@@ -461,17 +467,154 @@ describe.only('AWS', () => {
         });
 
         describe('extract', () => {
-            it('should extract', () => {
-                expect(hydrator.extract(state)).to.deep.equal({
 
+            it('should generate simple comparator state choice operation', () => {
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+
+                const state = (new states.Choice('isFoo'));
+
+                state.createComparatorRule(states.CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                    .setVariable('$.type')
+                    .setValue('foo')
+                    .next.to(handleFoo);
+
+                state.defaultTo(handleBar.getName());
+
+                const data = hydrator.extract(state);
+                expect(data).to.deep.equal({
+                    Choices: [
+                        {
+                            StringEquals: 'foo',
+                            Variable: '$.type',
+                            Next: 'foo'
+                        }
+                    ],
+                    Default: 'bar'
+                });
+            });
+
+            it('should generate simple logic state choice operation', () => {
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+
+                const state = (new states.Choice('isFoo'));
+                const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);
+
+
+                andOperation.createComparatorRule(states.CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                    .setVariable('$.type')
+                    .setValue('foo')
+
+                andOperation.createComparatorRule(states.CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                    .setVariable('$.secondType')
+                    .setValue('foo')
+
+                andOperation.next.to(handleFoo);
+                state.defaultTo(handleBar.getName());
+
+                const data = hydrator.extract(state);
+                expect(data).to.deep.equal({
+                    Choices: [
+                        {
+                            And: [
+                                {
+                                    Variable: '$.type',
+                                    StringEquals: 'foo'
+                                },
+                                {
+                                    Variable: '$.secondType',
+                                    StringEquals: 'foo'
+                                }
+                            ],
+                            Next: 'foo'
+                        }
+                    ],
+                    Default: 'bar'
+                });
+            });
+
+            it('should generate complex nested logic state choice operation', () => {
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+
+                const state = (new states.Choice('isFoo'));
+                const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);
+
+
+                andOperation.createComparatorRule(states.CHOICE_COMPARATOR_RULE.STRING_EQUALS)
+                    .setVariable('$.type')
+                    .setValue('foo')
+
+                andOperation.createLogicRule(states.CHOICE_LOGIC_RULE.NOT)
+                    .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
+                    .setVariable('$.test')
+                    .setValue(false);
+
+                andOperation.next.to(handleFoo);
+                state.defaultTo(handleBar.getName());
+
+                const data = hydrator.extract(state);
+                expect(data).to.deep.equal({
+                    Choices: [
+                        {
+                            And: [
+                                {
+                                    Variable: '$.type',
+                                    StringEquals: 'foo'
+                                },
+                                {
+                                    Not: {
+                                        Variable: "$.test",
+                                        BooleanEquals: false
+                                    }
+                                }
+                            ],
+                            Next: 'foo'
+                        }
+                    ],
+                    Default: 'bar'
                 });
             });
         });
 
         describe('hydrate', () => {
             it('should hydrate', () => {
-                hydrator.hydrate(state, {});
-                expect(null).to.be.null;
+                hydrator.hydrate(state, {
+                    Choices: [
+                        {
+                            And: [
+                                {
+                                    Variable: '$.type',
+                                    StringEquals: 'foo'
+                                },
+                                {
+                                    Not: {
+                                        Variable: "$.test",
+                                        BooleanEquals: false
+                                    }
+                                }
+                            ],
+                            Next: 'foo'
+                        }
+                    ],
+                    Default: 'bar'
+                });
+                const [logicOperation] = state.getOperations();
+                expect(logicOperation).instanceof(states.ChoiceLogicOperation);
+                expect(logicOperation.getRule()).to.be.equal(states.CHOICE_LOGIC_RULE.AND);
+                expect(logicOperation.next.nextStateName()).to.be.equal('foo');
+                const [stringComparator, nestedLogicOperator] = (<states.ChoiceLogicOperation>logicOperation).getOperations();
+                expect(stringComparator).instanceof(states.ChoiceComparatorOperation);
+                expect((<states.ChoiceComparatorOperation>stringComparator).getValue()).to.be.equal('foo');
+                expect((<states.ChoiceComparatorOperation>stringComparator).getVariable()).to.be.equal('$.type');
+                expect(nestedLogicOperator).instanceof(states.ChoiceLogicOperation);
+                expect(nestedLogicOperator.getRule()).to.be.equal(states.CHOICE_LOGIC_RULE.NOT);
+                const [nestedStringComparator] = (<states.ChoiceLogicOperation>nestedLogicOperator).getOperations();
+                expect(nestedStringComparator).instanceof(states.ChoiceComparatorOperation);
+                expect((<states.ChoiceComparatorOperation>nestedStringComparator).getValue()).to.be.equal(false);
+                expect((<states.ChoiceComparatorOperation>nestedStringComparator).getVariable()).to.be.equal('$.test');
+                expect(state.getDefault()).to.be.equal('bar');
             });
         });
     });

@@ -163,7 +163,7 @@ export class ChoiceComparatorOperation extends ChoiceOperation {
 
 export class Choice extends State {
     private operations: ChoiceOperation[];
-    private default: State | null;
+    private default: string | null;
 
     constructor(name: string) {
         super(name);
@@ -175,20 +175,23 @@ export class Choice extends State {
         return this.default;
     }
 
-    defaultTo(state: State) {
-        this.default = state;
+    defaultTo(stateName: string) {
+        this.default = stateName;
         return this;
     }
-
+    addOperation(operation: ChoiceOperation) {
+        this.operations.push(operation);
+        return this;
+    }
     createComparatorRule(rule: CHOICE_COMPARATOR_RULE): ChoiceComparatorOperation {
         const operation = new ChoiceComparatorOperation(this, rule);
-        this.operations.push(operation);
+        this.addOperation(operation);
         return operation;
     }
 
     createLogicRule(rule: CHOICE_LOGIC_RULE): ChoiceLogicOperation {
         const operation = new ChoiceLogicOperation(this, rule);
-        this.operations.push(operation);
+        this.addOperation(operation);
         return operation;
     }
 

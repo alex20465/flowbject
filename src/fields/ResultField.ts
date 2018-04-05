@@ -8,7 +8,7 @@ export class ResultField<T extends State> extends Field<T> {
     private result: any;
     constructor(state: T) {
         super(state);
-        this.result = null;
+        this.result = {};
     }
 
     set(value: SupportedValueType): T {
