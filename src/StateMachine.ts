@@ -1,5 +1,6 @@
 import { State } from "./states";
 import { NextField } from "./fields";
+import { linkStates } from "./utils";
 
 export interface StateMachineOptions {
     comment?: string
@@ -47,25 +48,8 @@ export class StateMachine {
         return this;
     }
 
-    autoNextSetup() {
-        let previousState: any;
-        this.states.forEach((state) => {
-            if (previousState) {
-                const next = <NextField<any>>(<any>previousState).next;
-                if (next && !next.isConfigured()) {
-                    next.to(state);
-                }
-            }
-            previousState = state;
-        });
-
-        if (previousState) {
-            const next = <NextField<any>>(previousState).next;
-            if (next && !next.isConfigured()) {
-                next.end();
-            }
-        }
-
+    autoNextSetup(): void {
+        linkStates(this.states);
     }
 
     validate(): Error[] {

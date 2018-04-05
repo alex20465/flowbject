@@ -20,6 +20,7 @@ export class ResultField<T extends State> extends Field<T> {
     }
 
     setAll(value: ResultType): T {
+        this.receiveConfiguration();
         this.result = value;
         return this.getParentState();
     }

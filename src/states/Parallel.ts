@@ -1,5 +1,6 @@
 import { State } from './State';
 import { PathField, ResultPathField, ResultField, NextField, Field } from '../fields/index';
+import { linkStates } from '../utils';
 
 export class ParallelBranch {
     private startAt: State;
@@ -25,6 +26,10 @@ export class ParallelBranch {
 
     getStates() {
         return this.states.slice(0);
+    }
+
+    autoNextSetup() {
+        linkStates(this.states);
     }
 
     validate(): Error | null {
@@ -61,7 +66,6 @@ export class Parallel extends State {
     getBranches() {
         return this.branches.slice(0);
     }
-
 
     validate() {
         let errors = super.validate();
