@@ -1,11 +1,22 @@
 import * as fields from '../fields';
 import * as states from '../states';
 import { StateMachine } from '../StateMachine';
+import { EventEmitter } from 'events';
 
 /**
  * @todo: Implement abstract missing generator methods: Parallel etc.
  */
 export abstract class AbstractGenerator {
+    protected emitter: EventEmitter;
+
+    constructor() {
+        this.emitter = new EventEmitter();
+    }
+
+    on(eventName: string, listener: (target: (fields.Field<any> | states.State)) => void) {
+        this.emitter.on(eventName, listener);
+    }
+
     abstract generateStateMachine(stateMachine: StateMachine): Object;
     abstract generateNextField(field: fields.NextField<any>): Object;
     abstract generatePathField(field: fields.PathField<any>): Object;
@@ -24,6 +35,9 @@ export abstract class AbstractGenerator {
     }
 
     generateField(field: fields.Field<any>) {
-        return this.getMethodTarget(field).call(this, field);
+        this.emitter.emit(`before::generate::field::${field.constructor.name}`, field);
+        const res = this.getMethodTarget(field).call(this, field);
+        this.emitter.emit(`after::generate::field::${field.constructor.name}`, field);
+        return res;
     }
 }

@@ -51,7 +51,7 @@ export class StepFunctionsGenerator extends AbstractGenerator {
         return data;
     }
     generateNextField(field: fields.NextField<any>): Object {
-        if(field.isLocked()) {
+        if (field.isLocked()) {
             return {};
         } else if (field.isEnd()) {
             return { End: true };
@@ -223,15 +223,21 @@ export class StepFunctionsGenerator extends AbstractGenerator {
     }
 
     generateState(state: states.State) {
+        this.emitter.emit(`before::generate::state::${state.constructor.name}`, state);
+
         let data = this.getMethodTarget(state).call(this, state);
         const validationErrors = state.validate();
         if (validationErrors.length) {
             throw validationErrors[0];
         }
-        return state.getFields()
+        const res = state.getFields()
             .filter((field) => field.isConfigured())
             .reduce((result, field) => {
                 return Object.assign(result, this.generateField(field));
             }, data);
+
+        this.emitter.emit(`after::generate::state::${state.constructor.name}`, state);
+
+        return res;
     }
 }

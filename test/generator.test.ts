@@ -64,6 +64,17 @@ describe('AWSStepFunctions', () => {
             });
         });
 
+        it('should emit generate event "before::generate::state::Task"', () => {
+            const state = (new Task('foo')).setResource('XY').next.end();
+            let target: State = null;
+            generator.on('before::generate::state::Task', (t: State) => {
+                target = t;
+            });
+
+            const data = generator.generateState(state);
+            expect(target).instanceOf(Task);
+        });
+
         it('should generate state parallel', () => {
             const generateImage = new Parallel('generateImage');
             generateImage
@@ -310,6 +321,8 @@ describe('AWSStepFunctions', () => {
                 Cause: 'test'
             });
         });
+
+
     });
 
     describe('generateStateMachine', () => {
