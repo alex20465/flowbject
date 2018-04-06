@@ -1,12 +1,16 @@
 import { expect } from 'chai';
 import { AWSStepFunctionsHydratorManager } from '../src/hydrators';
-import { Wait, Task, NextField } from '../src';
+import { Wait, Task, NextField, StateMachine } from '../src';
+
+const awsParallelExampleFixture = require('./fixtures/aws-parallel-example.json');
 
 describe('Hydrator Manager', () => {
     let manager: AWSStepFunctionsHydratorManager;
+    let stateMachine: StateMachine;
     let fooState: Task;
     beforeEach(() => {
         manager = new AWSStepFunctionsHydratorManager();
+        stateMachine = new StateMachine();
         fooState = new Task('foo');
     });
 
@@ -41,4 +45,25 @@ describe('Hydrator Manager', () => {
         });
     });
 
+    it('should extract stateMachine', () => {
+        stateMachine.addState(fooState.setResource('xy')).link();
+        const data = manager.extractStateMachine(stateMachine);
+        expect(data).to.deep.equal({
+            StartAt: 'foo',
+            States: {
+                foo: {
+                    Type: 'Task',
+                    Resource: 'xy',
+                    End: true
+                }
+            }
+        });
+    });
+
+    it('should hydrate and extract aws parallel example without changes', () => {
+        manager.hydrateStateMachine(stateMachine, awsParallelExampleFixture);
+
+        const data = manager.extractStateMachine(stateMachine);
+        expect(data).to.deep.equal(awsParallelExampleFixture);
+    });
 });

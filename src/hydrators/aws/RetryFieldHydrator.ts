@@ -59,7 +59,7 @@ export class RetryFieldHydrator extends AbstractHydrator<RetryField<any>, Object
     hydrate(instance: RetryField<any>, data: any) {
         const { Retry } = data;
 
-        (Retry || []).forEach((retry) => {
+        (Retry || []).forEach((retry: any) => {
             const errorCode = retry.ErrorEquals[0];
             const retrier = instance.createRetrier(this.findErrorCode(errorCode));
             if (retry.MaxAttempts !== undefined) {

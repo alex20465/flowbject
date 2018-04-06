@@ -12,7 +12,7 @@ export class StateMachine {
     private comment: string | null;
     private timeout: number | null;
     private version: string | null;
-    private startState: State | null;
+    private startAt: string | null;
     private states: State[];
     private _state_index: { [k: string]: number }
 
@@ -22,12 +22,8 @@ export class StateMachine {
         this.comment = options.comment || null;
         this.timeout = options.timeout || null;
         this.version = options.version || null;
-        this.startState = null;
+        this.startAt = null;
         this._state_index = {};
-    }
-    startAt(state: State): this {
-        this.startState = state;
-        return this;
     }
 
     private indexState(state: State, index: number) {
@@ -41,13 +37,13 @@ export class StateMachine {
     addState(state: State): this {
         const index = this.states.push(state);
         this.indexState(state, index);
-        if (this.startState === null) {
-            this.startAt(state);
+        if (this.startAt === null) {
+            this.setStartState(state.getName());
         }
         return this;
     }
 
-    autoNextSetup(): void {
+    link(): void {
         linkStates(this.states);
     }
 
@@ -67,5 +63,18 @@ export class StateMachine {
     getTimeout() { return this.timeout }
     getVersion() { return this.version }
     getStates() { return this.states.slice(0) }
-    getStartState() { return this.startState }
+    getStartState() { return this.startAt }
+
+    setComment(comment: string) {
+        this.comment = comment;
+    }
+    setTimeout(timeout: number) {
+        this.timeout = timeout;
+    }
+    setVersion(version: string) {
+        this.version = version;
+    }
+    setStartState(stateName: string) {
+        this.startAt = stateName;
+    }
 }
