@@ -67,7 +67,6 @@ export class ChoiceStateHydrator extends AbstractHydrator<Choice, AWSStepFunctio
             const operation = parent.createLogicRule(logicOperationRule);
             const logicOperationName = LogicRuleMap[parseInt(logicOperationRule)];
             this.manager.hydrateRelatedFields(operation, data);
-            console.log(logicOperationName, data)
             const nestedOperationData: any = data[logicOperationName];
             if(nestedOperationData.length) {
                 nestedOperationData.forEach((operationData: any) => {

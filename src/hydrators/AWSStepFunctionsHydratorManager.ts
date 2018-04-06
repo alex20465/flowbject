@@ -47,6 +47,11 @@ const stateHydratorRegistery: StateHydratorRegistry[] = [
         cls: states.Wait,
         typeName: 'Wait',
     },
+    {
+        hydrator: hydrators.PassStateHydrator,
+        cls: states.Pass,
+        typeName: 'Pass',
+    },
 ]
 
 const fieldHydratorRegistry: FieldHydratorRegistry[] = [
@@ -96,7 +101,24 @@ export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
         return hydrator.extract(field);
     }
     extractStateMachine(stateMachine: StateMachine): any {
-        return null;
+        let data: any = {
+            StartAt: stateMachine.getStartState(),
+            States: {}
+        };
+        if (stateMachine.getComment()) {
+            data['Comment'] = stateMachine.getComment();
+        }
+        if (stateMachine.getTimeout()) {
+            data['TimeoutSeconds'] = stateMachine.getTimeout();
+        }
+        if (stateMachine.getVersion()) {
+            data['Version'] = stateMachine.getVersion();
+        }
+        data.States = stateMachine.getStates().reduce((states: any, state) => {
+            states[state.getName()] = this.extractState(state);
+            return states;
+        }, {});
+        return data;
     }
 
     extractRelatedFields(target: any) {
@@ -125,8 +147,25 @@ export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
         hydrator.hydrate(field, data);
         return field;
     }
-    hydrateStateMachine(data: any): StateMachine {
-        return null;
+    hydrateStateMachine(stateMachine: StateMachine, data: any): StateMachine {
+        if(data['TimeoutSeconds']) {
+            stateMachine.setTimeout(parseInt(data['TimeoutSeconds']));
+        }
+        if(data['Comment']) {
+            stateMachine.setComment(data['Comment']);
+        }
+        if(data['Version']) {
+            stateMachine.setVersion(data['Version']);
+        }
+        if(data['StartAt']) {
+            stateMachine.setStartState(data['StartAt']);
+        }
+        Object.keys(data['States']).forEach((stateName: string) => {
+            const stateData = data['States'][stateName];
+            const state = this.hydrateState(stateName, stateData);
+            stateMachine.addState(state);
+        });
+        return stateMachine;
     }
 
     getRelatedConfiguredFields(target: any, onlyConfigured: boolean = true): fields.Field<any>[] {

@@ -17,6 +17,7 @@ export class ParallelStateHydrator extends AbstractHydrator<Parallel, AWSStepFun
                 }, {})
             }
         });
+        Object.assign(data, this.manager.extractRelatedFields(instance));
         return data;
     }
     hydrate(instance: Parallel, data: any) {
@@ -29,7 +30,7 @@ export class ParallelStateHydrator extends AbstractHydrator<Parallel, AWSStepFun
                 branch.addState(state);
             });
         });
-
+        this.manager.hydrateRelatedFields(instance, data);
         return instance;
     }
 }

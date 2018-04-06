@@ -12,6 +12,6 @@ export abstract class AbstractHydratorManager {
 
     abstract hydrateState(name: string, data: any): State;
     abstract hydrateField(field: Field<any>, data: any): Field<any>;
-    abstract hydrateStateMachine(data: any): StateMachine;
+    abstract hydrateStateMachine(stateMachine: StateMachine, data: any): StateMachine;
 
 }
