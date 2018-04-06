@@ -10,8 +10,7 @@ export interface NextFieldOptions {
 export class NextField<T extends State> extends Field<T> {
     required = true;
 
-    private nextTargetName: string;
-
+    private nextStateName: string;
     private _end: boolean;
     private _endForbidden: boolean;
     private _isLocked: boolean;
@@ -28,24 +27,24 @@ export class NextField<T extends State> extends Field<T> {
         return this._isLocked ? true : false;
     }
 
-    to(target: State | string): T {
-        this.assertUnlocked();
-        if (target instanceof State) {
-            this.nextTargetName = target.getName();
-        } else {
-            this.nextTargetName = target;
-        }
-        this.receiveConfiguration();
-        return this.getParentState();
-    }
-
     isEnd() {
         this.assertUnlocked();
         return this._end;
     }
 
-    nextStateName() {
-        return this.nextTargetName;
+    set(target: State | string): T {
+        this.assertUnlocked();
+        if (target instanceof State) {
+            this.nextStateName = target.getName();
+        } else {
+            this.nextStateName = target;
+        }
+        this.receiveConfiguration();
+        return this.getParentState();
+    }
+
+    get() {
+        return this.nextStateName;
     }
 
     private assertUnlocked() {
@@ -54,7 +53,7 @@ export class NextField<T extends State> extends Field<T> {
         }
     }
 
-    end(): T {
+    setEnd(): T {
         if (this._endForbidden === true) {
             throw new Error(`next.End is forbidden to state ${this.getParentState().getName()}`);
         }

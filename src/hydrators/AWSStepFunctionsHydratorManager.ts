@@ -101,35 +101,19 @@ export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
         return hydrator.extract(field);
     }
     extractStateMachine(stateMachine: StateMachine): any {
-        let data: any = {
-            StartAt: stateMachine.getStartState(),
-            States: {}
-        };
-        if (stateMachine.getComment()) {
-            data['Comment'] = stateMachine.getComment();
-        }
-        if (stateMachine.getTimeout()) {
-            data['TimeoutSeconds'] = stateMachine.getTimeout();
-        }
-        if (stateMachine.getVersion()) {
-            data['Version'] = stateMachine.getVersion();
-        }
-        data.States = stateMachine.getStates().reduce((states: any, state) => {
-            states[state.getName()] = this.extractState(state);
-            return states;
-        }, {});
-        return data;
+        const hydrator = new hydrators.StateMachineHydrator(this);
+        return hydrator.extract(stateMachine);
     }
 
     extractRelatedFields(target: any) {
         let data = {};
-        const relatedFields = this.getRelatedConfiguredFields(target);
+        const relatedFields = this.getRelatedFields(target);
         return relatedFields.reduce((data, field) => {
             return Object.assign(data, this.extractField(field));
         }, data);
     }
     hydrateRelatedFields(target: any, data: any): any {
-        const relatedFields = this.getRelatedConfiguredFields(target, false);
+        const relatedFields = this.getRelatedFields(target, false);
         relatedFields.forEach((field) => {
             this.hydrateField(field, data);
         });
@@ -148,32 +132,16 @@ export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
         return field;
     }
     hydrateStateMachine(stateMachine: StateMachine, data: any): StateMachine {
-        if(data['TimeoutSeconds']) {
-            stateMachine.setTimeout(parseInt(data['TimeoutSeconds']));
-        }
-        if(data['Comment']) {
-            stateMachine.setComment(data['Comment']);
-        }
-        if(data['Version']) {
-            stateMachine.setVersion(data['Version']);
-        }
-        if(data['StartAt']) {
-            stateMachine.setStartState(data['StartAt']);
-        }
-        Object.keys(data['States']).forEach((stateName: string) => {
-            const stateData = data['States'][stateName];
-            const state = this.hydrateState(stateName, stateData);
-            stateMachine.addState(state);
-        });
-        return stateMachine;
+        const hydrator = new hydrators.StateMachineHydrator(this);
+        return hydrator.hydrate(stateMachine, data);
     }
 
-    getRelatedConfiguredFields(target: any, onlyConfigured: boolean = true): fields.Field<any>[] {
+    getRelatedFields(target: any, configured: boolean = true): fields.Field<any>[] {
         const properies = Object.keys(target);
 
         return properies.filter((name: string) => {
             const property = target[name];
-            if (property instanceof fields.Field && (onlyConfigured === false || property.isConfigured())) {
+            if (property instanceof fields.Field && (configured === false || property.isConfigured())) {
                 return true;
             } else {
                 return false;

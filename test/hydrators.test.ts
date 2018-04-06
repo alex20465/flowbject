@@ -25,13 +25,13 @@ describe('AWS', () => {
 
         describe('extract', () => {
             it('should extract End=true', () => {
-                field.end();
+                field.setEnd();
                 expect(hydrator.extract(field)).to.deep.equal({
                     End: true
                 });
             });
             it('should extract Next=xy', () => {
-                field.to('xy');
+                field.set('xy');
                 expect(hydrator.extract(field)).to.deep.equal({
                     Next: 'xy'
                 });
@@ -45,7 +45,7 @@ describe('AWS', () => {
             });
             it('should extract Next=xy', () => {
                 hydrator.hydrate(field, { Next: 'fire' });
-                expect(field.nextStateName()).to.be.equal('fire');
+                expect(field.get()).to.be.equal('fire');
             });
         })
     });
@@ -195,7 +195,7 @@ describe('AWS', () => {
         describe('extract', () => {
             it('should extract catcher with maxAttempts', () => {
                 const catcher = field.errors(['NotFoundError']);
-                catcher.next.end();
+                catcher.next.setEnd();
                 catcher.resultPath.set('$.foo')
                 expect(hydrator.extract(field)).to.deep.equal({
                     Catch: [
@@ -228,7 +228,7 @@ describe('AWS', () => {
 
                 expect(notFoundCatcher).not.to.be.undefined;
                 expect(timeoutCatcher).not.to.be.undefined;
-                expect(notFoundCatcher.next.nextStateName()).to.be.equal('test');
+                expect(notFoundCatcher.next.get()).to.be.equal('test');
                 expect(notFoundCatcher.resultPath.get()).to.be.equal('$.bar');
                 expect(timeoutCatcher.next.isEnd()).to.be.true;
             });
@@ -469,15 +469,15 @@ describe('AWS', () => {
         describe('extract', () => {
 
             it('should generate simple comparator state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
 
                 const state = (new states.Choice('isFoo'));
 
                 state.createComparatorRule(states.CHOICE_COMPARATOR_RULE.STRING_EQUALS)
                     .setVariable('$.type')
                     .setValue('foo')
-                    .next.to(handleFoo);
+                    .next.set(handleFoo);
 
                 state.defaultTo(handleBar.getName());
 
@@ -495,8 +495,8 @@ describe('AWS', () => {
             });
 
             it('should generate simple logic state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
 
                 const state = (new states.Choice('isFoo'));
                 const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);
@@ -510,7 +510,7 @@ describe('AWS', () => {
                     .setVariable('$.secondType')
                     .setValue('foo')
 
-                andOperation.next.to(handleFoo);
+                andOperation.next.set(handleFoo);
                 state.defaultTo(handleBar.getName());
 
                 const data = hydrator.extract(state);
@@ -535,8 +535,8 @@ describe('AWS', () => {
             });
 
             it('should generate complex nested logic state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
 
                 const state = (new states.Choice('isFoo'));
                 const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);
@@ -551,7 +551,7 @@ describe('AWS', () => {
                     .setVariable('$.test')
                     .setValue(false);
 
-                andOperation.next.to(handleFoo);
+                andOperation.next.set(handleFoo);
                 state.defaultTo(handleBar.getName());
 
                 const data = hydrator.extract(state);
@@ -603,7 +603,7 @@ describe('AWS', () => {
                 const [logicOperation] = state.getOperations();
                 expect(logicOperation).instanceof(states.ChoiceLogicOperation);
                 expect(logicOperation.getRule()).to.be.equal(states.CHOICE_LOGIC_RULE.AND);
-                expect(logicOperation.next.nextStateName()).to.be.equal('foo');
+                expect(logicOperation.next.get()).to.be.equal('foo');
                 const [stringComparator, nestedLogicOperator] = (<states.ChoiceLogicOperation>logicOperation).getOperations();
                 expect(stringComparator).instanceof(states.ChoiceComparatorOperation);
                 expect((<states.ChoiceComparatorOperation>stringComparator).getValue()).to.be.equal('foo');

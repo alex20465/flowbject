@@ -10,14 +10,14 @@ export class NextFieldHydrator extends AbstractHydrator<NextField<any>, Object> 
         } else if (instance.isEnd()) {
             return { End: true };
         } else {
-            return { Next: instance.nextStateName() };
+            return { Next: instance.get() };
         }
     }
     hydrate(instance: NextField<any>, data: any) {
         if (data['End'] === true) {
-            instance.end();
+            instance.setEnd();
         } else if (data['Next']) {
-            instance.to(data['Next']);
+            instance.set(data['Next']);
         }
         return instance;
     }

@@ -9,7 +9,7 @@ describe('State Machine', () => {
 
     beforeEach(() => {
         machine = new StateMachine();
-        state = (new Pass('foo')).next.end();
+        state = (new Pass('foo')).next.setEnd();
     });
 
     describe('validation', () => {

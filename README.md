@@ -1,9 +1,8 @@
 # Flowbject
 
-Flowbject allows you to build, validate and test your state-machine JSON in a more convenient way by interacting with Objects. This has many use-cases such as local state-flow validation, custom middlewares such as task identity resolvers, Tasks input/output mocking for flow-testing.
+Flowbject is a high-level library whose aim is to help with writing state-machine flows. The concept is based on [Amazon-State-Language](https://states-language.net/spec.html).
 
-The concept is based on [Amazon-State-Language](https://states-language.net/spec.html).
-
+It provides a more convenient way to write and manipulate states. The state-machine JSON extraction is encapsulated in hydrators and allows the integration of multiple API languages such as AWS-StepFunctions.
 
 ## Installation
 
@@ -13,54 +12,37 @@ npm install flowbject
 
 ## Usage
 
-### Simple task build
+Here is an example how to build a state-machine and extract the language-specifications to AWS-StepFunctions.
 
 ```typescript
-import * as fobject from 'flowbject';
+import { StateMachine, Pass, AWSStepFunctionsHydratorManager } from "flowbject";
 
+const stateMachine = new StateMachine({
+    comment: 'A Hello World example of the Amazon States Language using a Pass state'
+});
 
-const stateMachine = new fobject.StateMachine();
+const helloWorld = (new Pass('HelloWorld'))
+    .result.set('Hello World!')
+    .next.setEnd();
 
-const readImage = new fobject.Task('readImageFromS3')
-    .setResource('arn::...');
+stateMachine.addState(helloWorld);
 
-const convertToThumbnail = new fobject.Task('convertToThumbnail')
-    .setResource('arn::...');
+const manager = new AWSStepFunctionsHydratorManager();
 
-const saveImage = new fobject.Task('saveToS3')
-    .setResource('arn::...');
-
-stateMachine
-    .addState(readImage)
-    .addState(convertToThumbnail)
-    .addState(saveImage)
-    .autoNextSetup(); // setup the tasks next-field automatically
-
-const generator = new fobject.StepFunctionsGenerator();
-
-const data = generator.generateStateMachine(stateMachine);
+const result = manager.extractStateMachine(stateMachine);
 ```
 
-Output:
+Results:
 
 ```json
 {
-    "StartAt": "readImageFromS3",
+    "Comment": "A Hello Worldexample of the Amazon States Language using a Pass state",
+    "StartAt": "HelloWorld",
     "States": {
-        "readImageFromS3": {
-            "Type": "Task",
-            "Resource": "arn::...",
-            "Next": "convertToThumbnail"
-        },
-        "convertToThumbnail": {
-            "Type": "Task",
-            "Resource": "arn::...",
-            "Next": "saveToS3"
-        },
-        "saveToS3": {
-            "Type": "Task",
-            "Resource": "arn::...",
-            "End": true
+        "HelloWorld": {
+            "Result": "Hello World!",
+            "End": true,
+            "Type": "Pass"
         }
     }
 }

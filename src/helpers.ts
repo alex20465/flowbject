@@ -7,7 +7,7 @@ export function statesAutolink(stateMachine: StateMachine) {
         if (previousState) {
             const next = <NextField<any>>(<any>previousState).next;
             if (next && !next.isConfigured()) {
-                next.to(state);
+                next.set(state);
             }
         }
         previousState = state;
@@ -16,7 +16,7 @@ export function statesAutolink(stateMachine: StateMachine) {
     if (previousState) {
         const next = <NextField<any>>(previousState).next;
         if (next && !next.isConfigured()) {
-            next.end();
+            next.setEnd();
         }
     }
 }

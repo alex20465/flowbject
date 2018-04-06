@@ -14,3 +14,4 @@ export { SucceedStateHydrator } from './SucceedStateHydrator';
 export { TaskStateHydrator } from './TaskStateHydrator';
 export { WaitStateHydrator } from './WaitStateHydrator';
 export { PassStateHydrator } from './PassStateHydrator';
+export { StateMachineHydrator } from './StateMachineHydrator';
