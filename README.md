@@ -22,9 +22,7 @@ const stateMachine = new StateMachine({
     comment: 'A Hello World example of the Amazon States Language using a Pass state'
 });
 
-const helloWorld = (new Pass('HelloWorld'))
-    .result.set('Hello World!')
-    .next.end();
+const helloWorld = (new Pass('HelloWorld')).result.set('Hello World!')
 
 stateMachine.states.add(helloWorld);
 
