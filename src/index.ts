@@ -1,3 +1,4 @@
 export * from './states/index';
 export * from './fields/index';
-export { StateMachine } from './StateMachine';
+export * from './hydrators';
+export * from './StateMachine';
