@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { StateMachine } from '../src/StateMachine';
 import { Pass, State } from '../src/states';
+import { toASCII } from 'punycode';
 
 describe('State Machine', () => {
 
@@ -9,7 +10,7 @@ describe('State Machine', () => {
 
     beforeEach(() => {
         machine = new StateMachine();
-        state = (new Pass('foo')).next.setEnd();
+        state = (new Pass('foo')).next.end();
     });
 
     describe('validation', () => {
@@ -20,8 +21,18 @@ describe('State Machine', () => {
         });
 
         it('should respond without errors after adding a state', () => {
-            const errors = machine.addState(state).validate();
+            machine.states.add(state);
+            const errors = machine.validate();
             expect(errors).lengthOf(0);
+        });
+    });
+
+    describe('getState', () => {
+        beforeEach(() => {
+            machine.states.add(state);
+        });
+        it('should respond with the Pass=foo instance', () => {
+            expect(machine.states.get('foo')).to.be.equal(state);
         });
     });
 
@@ -44,5 +55,24 @@ describe('State Machine', () => {
         it('should provide version', () => {
             expect(machine.getVersion()).to.be.equal('1.0');
         });
+    });
+
+    describe('autoLink enabled', () => {
+        let secondState: Pass;
+        beforeEach(() => {
+            machine = new StateMachine({
+                autoLink: true
+            });
+            state = (new Pass('foo'));
+            secondState = new Pass('bar');
+        });
+
+            it('should link states automatically', () => {
+                machine.states.add(state).add(secondState);
+                expect(state.next.get()).to.be.equal(secondState.getName());
+                expect(secondState.next.isEnd()).to.be.true;
+                const errors = machine.validate();
+                expect(errors).lengthOf(0);
+            });
     });
 });

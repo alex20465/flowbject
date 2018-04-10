@@ -18,14 +18,15 @@ Here is an example how to build a state-machine and extract the language-specifi
 import { StateMachine, Pass, AWSStepFunctionsHydratorManager } from "flowbject";
 
 const stateMachine = new StateMachine({
+    autoLink: true,
     comment: 'A Hello World example of the Amazon States Language using a Pass state'
 });
 
 const helloWorld = (new Pass('HelloWorld'))
     .result.set('Hello World!')
-    .next.setEnd();
+    .next.end();
 
-stateMachine.addState(helloWorld);
+stateMachine.states.add(helloWorld);
 
 const manager = new AWSStepFunctionsHydratorManager();
 

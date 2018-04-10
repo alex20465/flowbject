@@ -32,7 +32,7 @@ describe('States', () => {
         });
 
         it('should contain no errors after [next] setup', () => {
-            const errors = state.next.setEnd().validate();
+            const errors = state.next.end().validate();
             expect(errors).lengthOf(0);
         });
     });
@@ -49,41 +49,41 @@ describe('States', () => {
         });
 
         it('should be a valid parallel state', () => {
-            state.addBranch().addState(notifyUser);
-            state.addBranch().addState(deleteRecord);
-            state.next.setEnd();
+            state.addBranch().states.add(notifyUser);
+            state.addBranch().states.add(deleteRecord);
+            state.next.end();
             const errors = state.validate();
             expect(errors).lengthOf(0);
         });
 
         it('should be invalid without branch states', () => {
             state.addBranch();
-            state.addBranch().addState(deleteRecord);
-            state.next.setEnd();
+            state.addBranch().states.add(deleteRecord);
+            state.next.end();
             const errors = state.validate();
             expect(errors).lengthOf(1);
             expect(errors[0].message).to.contain('branch does not contain any start-at');
         });
 
         it('should provide all encapsulated instance (branches, states)', () => {
-            state.addBranch().addState(notifyUser);
-            state.addBranch().addState(deleteRecord);
-            state.next.setEnd();
+            state.addBranch().states.add(notifyUser);
+            state.addBranch().states.add(deleteRecord);
+            state.next.end();
             const branches = state.getBranches();
 
             expect(branches).lengthOf(2);
             const [notifyUserBranch, deleteRecordBranch] = branches;
 
-            expect(notifyUserBranch.getStates()).lengthOf(1);
-            expect(deleteRecordBranch.getStates()).lengthOf(1);
-            expect(notifyUserBranch.getStates()).lengthOf(1);
-            expect(deleteRecordBranch.getStates()).lengthOf(1);
+            expect(notifyUserBranch.states.getAll()).lengthOf(1);
+            expect(deleteRecordBranch.states.getAll()).lengthOf(1);
+            expect(notifyUserBranch.states.getAll()).lengthOf(1);
+            expect(deleteRecordBranch.states.getAll()).lengthOf(1);
 
-            expect(notifyUserBranch.getStartAt()).to.be.equal(notifyUser);
-            expect(deleteRecordBranch.getStartAt()).to.be.equal(deleteRecord);
+            expect(notifyUserBranch.states.getStartStateName()).to.be.equal(notifyUser.getName());
+            expect(deleteRecordBranch.states.getStartStateName()).to.be.equal(deleteRecord.getName());
 
-            const [notifyUserState] = notifyUserBranch.getStates();
-            const [deleteRecordState] = deleteRecordBranch.getStates();
+            const [notifyUserState] = notifyUserBranch.states.getAll();
+            const [deleteRecordState] = deleteRecordBranch.states.getAll();
 
             expect(deleteRecordState.getName()).to.be.equal('deleteRecord');
             expect(notifyUserState.getName()).to.be.equal('notifyUser');
@@ -123,7 +123,7 @@ describe('States', () => {
 
         it('should be valid with nextField and resource setup', () => {
             const errors = state
-                .next.setEnd()
+                .next.end()
                 .setResource('thisIsMyResource')
                 .validate();
             expect(errors).lengthOf(0);
@@ -162,7 +162,7 @@ describe('States', () => {
         it('should add multiple nested operations', () => {
             const rootOperation = state
                 .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
-            rootOperation.next.setEnd();
+            rootOperation.next.end();
 
             const operationDepth1 = rootOperation
                 .createLogicRule(states.CHOICE_LOGIC_RULE.OR);
@@ -200,7 +200,7 @@ describe('States', () => {
             it('should validate without errors with correct configrations', () => {
                 const rootOperation = state
                     .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
-                rootOperation.next.setEnd();
+                rootOperation.next.end();
 
                 rootOperation
                     .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
@@ -218,7 +218,7 @@ describe('States', () => {
             it('should detect errors of nested operations (depth 1)', () => {
                 const rootOperation = state
                     .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
-                rootOperation.next.setEnd();
+                rootOperation.next.end();
 
                 rootOperation
                     .createComparatorRule(states.CHOICE_COMPARATOR_RULE.BOOLEAN_EQUALS)
@@ -236,7 +236,7 @@ describe('States', () => {
             it('should throw error when trying to add invalid value type to comparator rule BOOLEAN_EQUALS', () => {
                 const rootOperation = state
                     .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
-                rootOperation.next.setEnd();
+                rootOperation.next.end();
 
                 expect(() => {
                     rootOperation
@@ -248,7 +248,7 @@ describe('States', () => {
             it('should detect errors of nested operations (depth 2)', () => {
                 const rootOperation = state
                     .createLogicRule(states.CHOICE_LOGIC_RULE.AND)
-                rootOperation.next.setEnd();
+                rootOperation.next.end();
 
                 const operationDepth1 = rootOperation
                     .createLogicRule(states.CHOICE_LOGIC_RULE.OR);
@@ -293,7 +293,7 @@ describe('States', () => {
         });
 
         it('should respond with validation error when wait-seconds are not defined', () => {
-            const errors = state.next.setEnd().validate();
+            const errors = state.next.end().validate();
 
             expect(errors).lengthOf(1);
             expect(errors[0].message).to.contain('state requires "seconds" definition');
@@ -310,7 +310,7 @@ describe('States', () => {
         it('should get correct error type and message', () => {
             const error = new Error('error message xy');
             error.name = 'TestError';
-            fail.with(error);
+            fail.withError(error);
             expect(fail.getErrorType()).to.be.equal('TestError');
             expect(fail.getErrorMessage()).to.be.equal('error message xy');
         });

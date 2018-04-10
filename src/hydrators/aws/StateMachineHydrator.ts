@@ -6,7 +6,7 @@ import { StateMachine } from '../../StateMachine';
 export class StateMachineHydrator extends AbstractHydrator<StateMachine, AWSStepFunctionsHydratorManager> {
     extract(instance: StateMachine) {
         let data: any = {
-            StartAt: instance.getStartState(),
+            StartAt: instance.states.getStartStateName(),
             States: {}
         };
         if (instance.getComment()) {
@@ -18,7 +18,7 @@ export class StateMachineHydrator extends AbstractHydrator<StateMachine, AWSStep
         if (instance.getVersion()) {
             data['Version'] = instance.getVersion();
         }
-        data.States = instance.getStates().reduce((states: any, state) => {
+        data.States = instance.states.getAll().reduce((states: any, state) => {
             states[state.getName()] = this.manager.extractState(state);
             return states;
         }, {});
@@ -35,12 +35,12 @@ export class StateMachineHydrator extends AbstractHydrator<StateMachine, AWSStep
             instance.setVersion(data['Version']);
         }
         if (data['StartAt']) {
-            instance.setStartState(data['StartAt']);
+            instance.states.setStartStateName(data['StartAt']);
         }
         Object.keys(data['States']).forEach((stateName: string) => {
             const stateData = data['States'][stateName];
             const state = this.manager.hydrateState(stateName, stateData);
-            instance.addState(state);
+            instance.states.add(state);
         });
         return instance;
     }

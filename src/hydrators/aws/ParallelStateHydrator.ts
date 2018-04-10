@@ -10,8 +10,8 @@ export class ParallelStateHydrator extends AbstractHydrator<Parallel, AWSStepFun
         let data: any = { };
         data['Branches'] = instance.getBranches().map((branch) => {
             return {
-                StartAt: branch.getStartAt().getName(),
-                States: branch.getStates().reduce((data: any, state: State) => {
+                StartAt: branch.states.getStartStateName(),
+                States: branch.states.getAll().reduce((data: any, state: State) => {
                     data[state.getName()] = this.manager.extractState(state);
                     return data;
                 }, {})
@@ -27,7 +27,7 @@ export class ParallelStateHydrator extends AbstractHydrator<Parallel, AWSStepFun
             Object.keys(branchData.States).forEach((stateName) => {
                 const stateData = branchData.States[stateName];
                 const state = this.manager.hydrateState(stateName, stateData);
-                branch.addState(state);
+                branch.states.add(state);
             });
         });
         this.manager.hydrateRelatedFields(instance, data);

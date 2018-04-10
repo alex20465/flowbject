@@ -15,7 +15,7 @@ export class NextFieldHydrator extends AbstractHydrator<NextField<any>, Object> 
     }
     hydrate(instance: NextField<any>, data: any) {
         if (data['End'] === true) {
-            instance.setEnd();
+            instance.end();
         } else if (data['Next']) {
             instance.set(data['Next']);
         }

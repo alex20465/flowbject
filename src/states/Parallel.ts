@@ -1,39 +1,17 @@
-import { State } from './State';
+import { State, StateList } from './State';
 import { PathField, ResultPathField, ResultField, NextField, Field } from '../fields/index';
-import { linkStates } from '../utils';
 
 export class ParallelBranch {
-    private startAt: State;
-    private states: State[];
+    public states: StateList;
     private parent: Parallel;
 
     constructor(parentState: Parallel) {
         this.parent = parentState;
-        this.states = [];
-    }
-
-    addState(state: State) {
-        if (!this.states.length) {
-            this.startAt = state;
-        }
-        this.states.push(state);
-        return this;
-    }
-
-    getStartAt() {
-        return this.startAt;
-    }
-
-    getStates() {
-        return this.states.slice(0);
-    }
-
-    autoNextSetup() {
-        linkStates(this.states);
+        this.states = new StateList();
     }
 
     validate(): Error | null {
-        if (!this.startAt) {
+        if (!this.states.getStartStateName()) {
             return new Error('Parallel branch does not contain any start-at state');
         }
         // todo: validate added states

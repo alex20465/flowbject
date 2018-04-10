@@ -15,7 +15,7 @@ export class FailStateHydrator extends AbstractHydrator<Fail, Object> {
     hydrate(instance: Fail, data: any) {
         const err = new Error(data['Cause']);
         err.name = data['Error'];
-        instance.with(err);
+        instance.withError(err);
         return instance;
     }
 }

@@ -10,23 +10,3 @@ export function validateJSONPath(path: string): null | Error {
         return new Error(`Invalid json-path expression "${path}"`);
     }
 }
-
-export function linkStates(states: State[]) {
-    let previousState: any;
-    states.forEach((state) => {
-        if (previousState) {
-            const next = <NextField<any>>(<any>previousState).next;
-            if (next && !next.isConfigured()) {
-                next.set(state);
-            }
-        }
-        previousState = state;
-    });
-
-    if (previousState) {
-        const next = <NextField<any>>(previousState).next;
-        if (next && !next.isConfigured()) {
-            next.setEnd();
-        }
-    }
-}

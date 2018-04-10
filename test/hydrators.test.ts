@@ -11,7 +11,7 @@ describe('AWS', () => {
     beforeEach(() => {
         state = new states.Pass('foo');
         manager = new AWSStepFunctionsHydratorManager();
-    })
+    });
 
     describe('NextField', () => {
 
@@ -25,7 +25,7 @@ describe('AWS', () => {
 
         describe('extract', () => {
             it('should extract End=true', () => {
-                field.setEnd();
+                field.end();
                 expect(hydrator.extract(field)).to.deep.equal({
                     End: true
                 });
@@ -195,7 +195,7 @@ describe('AWS', () => {
         describe('extract', () => {
             it('should extract catcher with maxAttempts', () => {
                 const catcher = field.errors(['NotFoundError']);
-                catcher.next.setEnd();
+                catcher.next.end();
                 catcher.resultPath.set('$.foo')
                 expect(hydrator.extract(field)).to.deep.equal({
                     Catch: [
@@ -383,7 +383,7 @@ describe('AWS', () => {
         describe('extract', () => {
             it('should extract', () => {
                 const subTask = new states.Task('foo').setResource('xy');
-                state.addBranch().addState(subTask);
+                state.addBranch().states.add(subTask);
                 expect(hydrator.extract(state)).to.deep.equal({
                     Branches: [
                         {
@@ -417,8 +417,8 @@ describe('AWS', () => {
                 });
                 const [branch] = state.getBranches();
 
-                expect(branch.getStartAt().getName()).to.be.equal('foo');
-                const [fooState] = branch.getStates();
+                expect(branch.states.getStartStateName()).to.be.equal('foo');
+                const [fooState] = branch.states.getAll();
                 expect((<states.Task>fooState).getResource()).to.be.equal('xy');
             });
         });
@@ -436,7 +436,7 @@ describe('AWS', () => {
 
         describe('extract', () => {
             it('should extract', () => {
-                state.with(new Error('foo error'))
+                state.withError(new Error('foo error'))
                 expect(hydrator.extract(state)).to.deep.equal({
                     Error: 'Error',
                     Cause: 'foo error'
@@ -469,8 +469,8 @@ describe('AWS', () => {
         describe('extract', () => {
 
             it('should generate simple comparator state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
 
                 const state = (new states.Choice('isFoo'));
 
@@ -495,8 +495,8 @@ describe('AWS', () => {
             });
 
             it('should generate simple logic state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
 
                 const state = (new states.Choice('isFoo'));
                 const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);
@@ -535,8 +535,8 @@ describe('AWS', () => {
             });
 
             it('should generate complex nested logic state choice operation', () => {
-                const handleFoo = (new states.Task('foo')).setResource('xy').next.setEnd();
-                const handleBar = (new states.Task('bar')).setResource('xy').next.setEnd();
+                const handleFoo = (new states.Task('foo')).setResource('xy').next.end();
+                const handleBar = (new states.Task('bar')).setResource('xy').next.end();
 
                 const state = (new states.Choice('isFoo'));
                 const andOperation = state.createLogicRule(states.CHOICE_LOGIC_RULE.AND);

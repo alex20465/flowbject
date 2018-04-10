@@ -42,12 +42,12 @@ describe('Fields', () => {
         });
 
         it('should be valid after END() call', () => {
-            const validationResponse = nextField.setEnd().next.validate();
+            const validationResponse = nextField.end().next.validate();
             expect(validationResponse).to.be.null;
         });
 
         it('should be configured after END() call', () => {
-            nextField.setEnd();
+            nextField.end();
             expect(nextField.isConfigured()).to.be.true;
         });
     });
@@ -154,7 +154,7 @@ describe('Fields', () => {
 
         it('should validate without error but with next setup', () => {
             const mockReportState = new Task('report');
-            state.catch.errors(['test']).next.setEnd();
+            state.catch.errors(['test']).next.end();
             const error = state.catch.validate();
             expect(error).to.be.null;
         });

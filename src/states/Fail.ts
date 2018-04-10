@@ -4,7 +4,7 @@ import { NextField } from '../fields';
 export class Fail extends State {
     private error: Error;
 
-    with(error: Error) {
+    withError(error: Error) {
         this.error = error;
         return this;
     }

@@ -53,7 +53,7 @@ export class NextField<T extends State> extends Field<T> {
         }
     }
 
-    setEnd(): T {
+    end(): T {
         if (this._endForbidden === true) {
             throw new Error(`next.End is forbidden to state ${this.getParentState().getName()}`);
         }

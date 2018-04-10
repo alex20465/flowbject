@@ -27,7 +27,7 @@ describe('Hydrator Manager', () => {
 
     it('should extract state Task', () => {
         const state = new Task('foo');
-        state.setResource('xy').next.setEnd();
+        state.setResource('xy').next.end();
         const data = manager.extractState(state);
         expect(data).to.deep.equal({
             Type: 'Task',
@@ -38,7 +38,7 @@ describe('Hydrator Manager', () => {
 
     it('should extract field Next', () => {
         const field = new NextField(fooState);
-        field.setEnd();
+        field.end();
         const data = manager.extractField(field);
         expect(data).to.deep.equal({
             End: true
@@ -46,7 +46,7 @@ describe('Hydrator Manager', () => {
     });
 
     it('should extract stateMachine', () => {
-        stateMachine.addState(fooState.setResource('xy')).link();
+        stateMachine.states.add(fooState.setResource('xy')).link();
         const data = manager.extractStateMachine(stateMachine);
         expect(data).to.deep.equal({
             StartAt: 'foo',
