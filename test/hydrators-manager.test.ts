@@ -9,7 +9,12 @@ describe('Hydrator Manager', () => {
     let stateMachine: StateMachine;
     let fooState: Task;
     beforeEach(() => {
-        manager = new AWSStepFunctionsHydratorManager();
+        manager = new AWSStepFunctionsHydratorManager({
+            emitter: {
+                delimiter: ':',
+                wildcard: true
+            }
+        });
         stateMachine = new StateMachine();
         fooState = new Task('foo');
     });
@@ -23,7 +28,6 @@ describe('Hydrator Manager', () => {
             Seconds: 1
         });
     });
-
 
     it('should extract state Task', () => {
         const state = new Task('foo');
@@ -65,5 +69,20 @@ describe('Hydrator Manager', () => {
 
         const data = manager.extractStateMachine(stateMachine);
         expect(data).to.deep.equal(awsParallelExampleFixture);
+    });
+
+    describe('EventEmitter', () => {
+        it('should emit the state extract event', () => {
+            let eventArgument = null;
+            manager.emitter.on('before:extract:state:*', (event) => {
+                eventArgument = event;
+            });
+            const wait = new Wait('foo');
+            wait.setSeconds(1);
+            const data = manager.extractState(wait);
+            expect(eventArgument).to.haveOwnProperty('state');
+            expect(eventArgument).to.haveOwnProperty('manager');
+            expect(eventArgument).to.haveOwnProperty('hydrator');
+        });
     });
 });
