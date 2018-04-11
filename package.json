@@ -1,6 +1,6 @@
 {
   "name": "flowbject",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Flowbject is a library that allows you to describe state machines with objects.",
   "main": "./dist/index.js",
   "scripts": {
