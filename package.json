@@ -1,6 +1,6 @@
 {
   "name": "flowbject",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "description": "Flowbject is a library that allows you to describe state machines with objects.",
   "main": "./dist/index.js",
   "scripts": {
@@ -16,10 +16,12 @@
   "author": "Alexandros Fotiadis <fotiadis90@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "JSONPath": "^0.11.2"
+    "JSONPath": "^0.11.2",
+    "eventemitter2": "^5.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.1.2",
+    "@types/eventemitter2": "^4.1.0",
     "@types/mocha": "^2.2.48",
     "@types/node": "^9.4.6",
     "chai": "^4.1.2",

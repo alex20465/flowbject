@@ -84,25 +84,42 @@ const fieldHydratorRegistry: FieldHydratorRegistry[] = [
 export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
     extractState(state: states.State): any {
         const hydrator = this.getStateHydrator(state);
+        this.emitter.emit(`before:extract:state:${state.constructor.name}`, {
+            state, manager: this, hydrator
+        });
         const data: any = hydrator.extract(state);
-
         Object.assign(data, this.extractRelatedFields(state), {
             Type: state.constructor.name,
         });
-
         if (state.getComment()) {
             data['Comment'] = state.getComment();
         }
-
+        this.emitter.emit(`after:extract:state:${state.constructor.name}`, {
+            state, manager: this, hydrator, data
+        });
         return data;
     }
     extractField(field: fields.Field<any>): any {
         const hydrator = this.getFieldHydrator(field);
-        return hydrator.extract(field);
+        this.emitter.emit(`before:extract:field:${field.constructor.name}`, {
+            field, hydrator, manager: this
+        });
+        const data = hydrator.extract(field);
+        this.emitter.emit(`after:extract:field:${field.constructor.name}`, {
+            field, hydrator, data, manager: this
+        });
+        return data;
     }
     extractStateMachine(stateMachine: StateMachine): any {
         const hydrator = new hydrators.StateMachineHydrator(this);
-        return hydrator.extract(stateMachine);
+        this.emitter.emit(`before:extract:machine`, {
+            stateMachine, hydrator, manager: this
+        });
+        const data = hydrator.extract(stateMachine);
+        this.emitter.emit(`after:extract:machine`, {
+            stateMachine, hydrator, manager: this, data
+        });
+        return data;
     }
 
     extractRelatedFields(target: any) {
@@ -123,17 +140,41 @@ export class AWSStepFunctionsHydratorManager extends AbstractHydratorManager {
         const registry = this.getStateRegistryByTypeName(data['Type']);
         const state: states.State = new (<any>registry.cls)(name);
         const hydrator: AbstractHydrator<any, this> = new (<any>registry.hydrator)(this);
-        return hydrator.hydrate(state, data);
+
+        this.emitter.emit(`before:hydrate:state:${state.constructor.name}`, {
+            state, registry, manager: this, hydrator
+        });
+
+        hydrator.hydrate(state, data);
+
+        this.emitter.emit(`after:hydrate:state:${state.constructor.name}`, {
+            state, registry, manager: this, hydrator
+        });
+        return state;
     }
 
     hydrateField(field: fields.Field<any>, data: any): fields.Field<any> {
         const hydrator = this.getFieldHydrator(field);
+        this.emitter.emit(`before:hydrate:field:${field.constructor.name}`, {
+            field, manager: this, hydrator
+        });
         hydrator.hydrate(field, data);
+        this.emitter.emit(`after:hydrate:field:${field.constructor.name}`, {
+            field, manager: this, hydrator
+        });
         return field;
     }
     hydrateStateMachine(stateMachine: StateMachine, data: any): StateMachine {
         const hydrator = new hydrators.StateMachineHydrator(this);
-        return hydrator.hydrate(stateMachine, data);
+        this.emitter.emit(`before:hydrate:machine`, {
+            stateMachine, manager: this, hydrator
+        });
+        hydrator.hydrate(stateMachine, data);
+        this.emitter.emit(`after:hydrate:machine`, {
+            stateMachine, manager: this, hydrator
+        });
+
+        return stateMachine;
     }
 
     getRelatedFields(target: any, configured: boolean = true): fields.Field<any>[] {
