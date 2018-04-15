@@ -1,7 +1,7 @@
 {
   "name": "flowbject",
   "version": "2.0.4",
-  "description": "Flowbject is a library that allows you to describe state machines with objects.",
+  "description": "Flowbject is a high-level library whose aim is to help with writing state-machine flows. The concept is based on Amazon-State-Language.",
   "main": "./dist/index.js",
   "scripts": {
     "test": "mocha --require ts-node/register --watch-extensions ts,tsx \"test/**/*.test.{ts,tsx}\"",
@@ -9,6 +9,9 @@
     "ts": "ts-node src/",
     "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "step functions", "serverless", "orchestration", "faas", "lambda", "aws", "dsl"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/alex20465/flowbject"
