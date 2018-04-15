@@ -1,6 +1,6 @@
 {
   "name": "flowbject",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "Flowbject is a high-level library whose aim is to help with writing state-machine flows. The concept is based on Amazon-State-Language.",
   "main": "./dist/index.js",
   "scripts": {
