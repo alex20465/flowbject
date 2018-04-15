@@ -39,6 +39,9 @@ export class NextField<T extends State> extends Field<T> {
         } else {
             this.nextStateName = target;
         }
+        if(this.isEnd()) {
+            this._end = false;
+        }
         this.receiveConfiguration();
         return this.getParentState();
     }

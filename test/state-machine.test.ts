@@ -70,6 +70,7 @@ describe('State Machine', () => {
             it('should link states automatically', () => {
                 machine.states.add(state).add(secondState);
                 expect(state.next.get()).to.be.equal(secondState.getName());
+                expect(state.next.isEnd()).to.be.equal(false);
                 expect(secondState.next.isEnd()).to.be.true;
                 const errors = machine.validate();
                 expect(errors).lengthOf(0);
