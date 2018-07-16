@@ -50,9 +50,9 @@ export interface StateListOptions {
 export class StateList {
     private states: State[];
     private _state_index: { [k: string]: number }
-    private startStateName: string|null;
+    private startStateName: string | null;
     private autoLink: boolean;
-    constructor(options: StateListOptions =  {}) {
+    constructor(options: StateListOptions = {}) {
         this.states = [];
         this._state_index = {};
         this.startStateName = null;
@@ -70,7 +70,7 @@ export class StateList {
             }
             previousState = state;
         });
-    
+
         if (previousState) {
             const next = <NextField<any>>(previousState).next;
             if (next && !next.isConfigured()) {
@@ -88,12 +88,12 @@ export class StateList {
         }
 
         const nextField: NextField<any> = (<any>state).next;
-        if(this.autoLink && (nextField instanceof NextField) && !nextField.isConfigured()) {            
+        if (this.autoLink && (nextField instanceof NextField) && !nextField.isConfigured()) {
             nextField.end();
-            if(index > 0) {
-                const previousState = this.states[index-1];
+            if (index > 0) {
+                const previousState = this.states[index - 1];
                 const nextField: NextField<any> = (<any>previousState).next;
-                if((nextField instanceof NextField && nextField.isEnd())) {
+                if ((nextField instanceof NextField && nextField.isEnd())) {
                     nextField.set(state);
                 }
             }
@@ -105,12 +105,30 @@ export class StateList {
     getAll() {
         return this.states.slice(0);
     }
+
     get(stateName: string): State {
         const idx = this._state_index[stateName];
         if (idx === undefined) {
             throw new Error(`State ${stateName} not found`);
         }
         return this.states[idx];
+    }
+
+    remove(stateName: string) {
+        const index = this._state_index[stateName];
+        if (index !== undefined) {
+            this.states.splice(index, 1);
+            this.reindex();
+        } else {
+            throw new Error("Failed to remove not existing state: " + stateName);
+        }
+    }
+
+    private reindex() {
+        this._state_index = this.states.reduce((acc, current, index) => {
+            acc[index] = current;
+            return acc;
+        }, {} as any);
     }
 
     getStartStateName() {

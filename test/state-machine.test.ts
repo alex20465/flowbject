@@ -36,6 +36,16 @@ describe('State Machine', () => {
         });
     });
 
+    describe('states list', () => {
+        beforeEach(() => {
+            machine.states.add(state);
+        });
+        it('sould remove a state by name', () => {
+            machine.states.remove('foo');
+            expect(() => machine.states.get('foo')).to.throw('State foo not found');
+        });
+    });
+
     describe('Core functionality', () => {
         let machine: StateMachine;
         beforeEach(() => {
@@ -67,13 +77,13 @@ describe('State Machine', () => {
             secondState = new Pass('bar');
         });
 
-            it('should link states automatically', () => {
-                machine.states.add(state).add(secondState);
-                expect(state.next.get()).to.be.equal(secondState.getName());
-                expect(state.next.isEnd()).to.be.equal(false);
-                expect(secondState.next.isEnd()).to.be.true;
-                const errors = machine.validate();
-                expect(errors).lengthOf(0);
-            });
+        it('should link states automatically', () => {
+            machine.states.add(state).add(secondState);
+            expect(state.next.get()).to.be.equal(secondState.getName());
+            expect(state.next.isEnd()).to.be.equal(false);
+            expect(secondState.next.isEnd()).to.be.true;
+            const errors = machine.validate();
+            expect(errors).lengthOf(0);
+        });
     });
 });
