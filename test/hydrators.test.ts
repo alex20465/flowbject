@@ -337,11 +337,16 @@ describe('AWS', () => {
                 hydrator.hydrate(state, {
                     Resource: 'xy',
                     TimeoutSeconds: 7,
-                    HeartbeatSeconds: 1
+                    HeartbeatSeconds: 1,
+                    ResultPath: "$.test",
+                    Next: "test"
                 });
                 expect(state.getResource()).to.be.equal('xy');
                 expect(state.getTimeout()).to.be.equal(7);
                 expect(state.getHeartbeat()).to.be.equal(1);
+                expect(state.resultPath.get()).to.be.equal("$.test");
+                expect(state.next.get()).to.be.equal("test");
+
             });
         });
     });

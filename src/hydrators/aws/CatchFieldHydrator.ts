@@ -22,10 +22,12 @@ export class CatchFieldHydrator extends AbstractHydrator<CatchField<any>, AWSSte
 
     hydrate(instance: CatchField<any>, data: any) {
 
-        data.Catch.forEach((catcherData: any) => {
-            const catcher = instance.errors(catcherData.ErrorEquals);
-            this.manager.hydrateRelatedFields(catcher, catcherData);
-        });
+        if (data["Catch"]) {
+            data.Catch.forEach((catcherData: any) => {
+                const catcher = instance.errors(catcherData.ErrorEquals);
+                this.manager.hydrateRelatedFields(catcher, catcherData);
+            });
+        }
 
         return instance;
     }
